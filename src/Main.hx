@@ -1,12 +1,15 @@
 package;
 
-import y2022.Day1;
 import haxe.Exception;
 import haxe.Http;
-import sys.io.File;
 import haxe.io.Path;
 import sys.FileSystem;
+import sys.io.File;
 
+import y2022.Day1;
+import y2022.Day2;
+
+using StringTools;
 using tink.CoreApi;
 
 typedef AdventFunc = String->String;
@@ -17,7 +20,13 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(2022, 1);
+		var testData:Null<String> = null;
+		var testDataLoc = Path.join(["./cache", "testdata"]);
+		if (FileSystem.exists("./cache") && FileSystem.exists(testDataLoc)) {
+			testData = File.getContent(testDataLoc);
+			if (testData.startsWith("###\n")) testData = null;
+		}
+		new Main(2022, 1, testData);
 	}
 
 	public function new(year:Int, day:Int, ?testData:String = null) {
@@ -28,7 +37,8 @@ class Main {
 		var funcMap = new Map<Int, Array<Array<AdventFunc>>>();
 
 		funcMap[2022] = [
-			[Day1.problem1, Day1.problem2]
+			[Day1.problem1, Day1.problem2],
+			[Day2.problem1, Day2.problem2]
 		];
 
 		getInput().handle(data -> {
@@ -67,9 +77,5 @@ class Main {
 
 	function dummy(data:String) {
 		return "dummy";
-	}
-
-	function day2prob1(data:String) {
-		return "";
 	}
 }
