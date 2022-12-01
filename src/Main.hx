@@ -1,5 +1,6 @@
 package;
 
+import y2022.Day1;
 import haxe.Exception;
 import haxe.Http;
 import sys.io.File;
@@ -27,8 +28,7 @@ class Main {
 		var funcMap = new Map<Int, Array<Array<AdventFunc>>>();
 
 		funcMap[2022] = [
-			[this.day1prob1, this.day1prob2],
-			[this.day2prob1]
+			[Day1.problem1, Day1.problem2]
 		];
 
 		getInput().handle(data -> {
@@ -67,45 +67,6 @@ class Main {
 
 	function dummy(data:String) {
 		return "dummy";
-	}
-
-	function day1prob1(data:String) {
-		var list = data.split("\n").map(d -> d == "" ? null : Std.parseInt(d));
-		var cur = 0, most = 0;
-
-		for (d in list) {
-			if (d == null) {
-				if (cur > most)
-					most = cur;
-				cur = 0;
-			} else
-				cur += d;
-		}
-
-		return Std.string(most);
-	}
-
-	function day1prob2(data:String) {
-		var list = data.split("\n").map(d -> d == "" ? null : Std.parseInt(d));
-		var cur = 0, most = [0, 0, 0];
-
-		for (d in list) {
-			if (d == null) {
-				for (x => mostx in most)
-					if (cur > mostx) {
-						var buf = cur;
-						cur = most[x];
-						most[x] = buf;
-						if (cur == 0) break;
-					}
-				cur = 0;
-			} else
-				cur += d;
-		}
-
-		for (_ => mostx in most) cur += mostx;
-
-		return Std.string(cur);
 	}
 
 	function day2prob1(data:String) {
