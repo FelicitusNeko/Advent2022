@@ -26,7 +26,7 @@ class Main {
 			testData = File.getContent(testDataLoc);
 			if (testData.startsWith("###\n")) testData = null;
 		}
-		new Main(2022, 1, testData);
+		new Main(2022, 2, testData);
 	}
 
 	public function new(year:Int, day:Int, ?testData:String = null) {
