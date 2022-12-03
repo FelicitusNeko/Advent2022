@@ -8,6 +8,7 @@ import sys.io.File;
 
 import y2022.Day1;
 import y2022.Day2;
+import y2022.Day3;
 
 using StringTools;
 using tink.CoreApi;
@@ -26,7 +27,7 @@ class Main {
 			testData = File.getContent(testDataLoc);
 			if (testData.startsWith("###\n")) testData = null;
 		}
-		new Main(2022, 2, testData);
+		new Main(2022, 3, testData);
 	}
 
 	public function new(year:Int, day:Int, ?testData:String = null) {
@@ -38,7 +39,8 @@ class Main {
 
 		funcMap[2022] = [
 			[Day1.problem1, Day1.problem2],
-			[Day2.problem1, Day2.problem2]
+			[Day2.problem1, Day2.problem2],
+			[Day3.problem1, Day3.problem2]
 		];
 
 		getInput().handle(data -> {
