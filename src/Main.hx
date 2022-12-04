@@ -9,6 +9,7 @@ import sys.io.File;
 import y2022.Day1;
 import y2022.Day2;
 import y2022.Day3;
+import y2022.Day4;
 
 using StringTools;
 using tink.CoreApi;
@@ -27,25 +28,27 @@ class Main {
 			testData = File.getContent(testDataLoc);
 			if (testData.startsWith("###\n")) testData = null;
 		}
-		new Main(2022, 3, testData);
+		new Main(null, null, testData);
 	}
 
-	public function new(year:Int, day:Int, ?testData:String = null) {
+	public function new(?year:Int, ?day:Int, ?testData:String = null) {
+		var today = Date.now();
 		this.testData = testData;
-		this.year = year;
-		this.day = day;
+		this.year = year == null ? today.getFullYear() : year;
+		this.day = day == null ? today.getDate() : day;
 
 		var funcMap = new Map<Int, Array<Array<AdventFunc>>>();
 
 		funcMap[2022] = [
 			[Day1.problem1, Day1.problem2],
 			[Day2.problem1, Day2.problem2],
-			[Day3.problem1, Day3.problem2]
+			[Day3.problem1, Day3.problem2],
+			[Day4.problem1, Day4.problem2]
 		];
 
 		getInput().handle(data -> {
-			for (x => func in funcMap[year][day - 1])
-				Sys.println('Day $day problem ${x + 1}: ' + func(data));
+			for (x => func in funcMap[this.year][this.day - 1])
+				Sys.println('Day ${this.day} problem ${x + 1}: ' + func(data));
 		});
 	}
 
