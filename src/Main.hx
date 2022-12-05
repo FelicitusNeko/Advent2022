@@ -10,6 +10,7 @@ import y2022.Day1;
 import y2022.Day2;
 import y2022.Day3;
 import y2022.Day4;
+import y2022.Day5;
 
 using StringTools;
 using tink.CoreApi;
@@ -43,7 +44,8 @@ class Main {
 			[Day1.problem1, Day1.problem2],
 			[Day2.problem1, Day2.problem2],
 			[Day3.problem1, Day3.problem2],
-			[Day4.problem1, Day4.problem2]
+			[Day4.problem1, Day4.problem2],
+			[Day5.problem1, Day5.problem2]
 		];
 
 		getInput().handle(data -> {
