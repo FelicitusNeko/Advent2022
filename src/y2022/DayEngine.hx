@@ -25,7 +25,7 @@ abstract class DayEngine {
 						var testRun = problem(test.data);
 						if (testRun == null || testRun == "") {
 							pass = false;
-							Sys.println('❌ <Test #${y+1} returned no data>');
+							Sys.println('❔<Test #${y+1} returned no data>');
 							break;
 						}
 						sure(testRun == test.expected[x]);
@@ -33,9 +33,9 @@ abstract class DayEngine {
 					} catch (e:Exception) {
 						pass = false;
 						if (e.message.startsWith("FAIL:"))
-							Sys.println('Assertion failed on test #${y + 1}\n${e.message}');
+							Sys.println('⛔Assertion failed on test #${y + 1}\n${e.message}');
 						else
-							Sys.println('Execution failed on test #${y + 1} and threw an exception\n${e.details()}');
+							Sys.println('❌Execution failed on test #${y + 1} and threw an exception\n${e.details()}');
 						break;
 					}
 				}
