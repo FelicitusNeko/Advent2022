@@ -11,6 +11,7 @@ import y2022.Day2;
 import y2022.Day3;
 import y2022.Day4;
 import y2022.Day5;
+import y2022.Day6;
 
 using StringTools;
 using tink.CoreApi;
@@ -35,6 +36,7 @@ class Main {
 	public function new(?year:Int, ?day:Int, ?testData:String = null) {
 		var today = Date.now();
 		this.testData = testData;
+		if (this.testData != null) Sys.println("Using test data");
 		this.year = year == null ? today.getFullYear() : year;
 		this.day = day == null ? today.getDate() : day;
 
@@ -45,7 +47,8 @@ class Main {
 			[Day2.problem1, Day2.problem2],
 			[Day3.problem1, Day3.problem2],
 			[Day4.problem1, Day4.problem2],
-			[Day5.problem1, Day5.problem2]
+			[Day5.problem1, Day5.problem2],
+			[Day6.problem1, Day6.problem2]
 		];
 
 		getInput().handle(data -> {

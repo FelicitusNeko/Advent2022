@@ -4,12 +4,12 @@ using StringTools;
 
 class Day {
   public static function problem1(data:String) {
-    var list = data.trim().split("\n");
+    var list = data.rtrim().split("\n");
 		return Std.string("");
   }
 
   public static function problem2(data:String) {
-    var list = data.trim().split("\n");
+    var list = data.rtrim().split("\n");
 		return Std.string("");
   }
 }
