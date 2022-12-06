@@ -20,7 +20,7 @@ class Day3 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: ["157", "70"]
+				expected: [157, 70]
 			}
 		});
 		new Day3(data, 3, tests);
@@ -48,7 +48,7 @@ class Day3 extends DayEngine {
 					break;
 				}
 		}
-		return Std.string(total);
+		return total;
 	}
 
 	function problem2(data:String) {
@@ -75,6 +75,6 @@ class Day3 extends DayEngine {
 				}
 			}
 		}
-		return Std.string(total);
+		return total;
 	}
 }

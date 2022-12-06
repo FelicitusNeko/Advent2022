@@ -70,7 +70,7 @@ class Day4 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: ["2", "4"]
+				expected: [2, 4]
 			}
 		});
 		new Day4(data, 4, tests);
@@ -82,7 +82,7 @@ class Day4 extends DayEngine {
 		for (assignment in list)
 			if (assignment.hasFullOverlap())
 				count++;
-		return Std.string(count);
+		return count;
 	}
 
 	function problem2(data:String) {
@@ -91,6 +91,6 @@ class Day4 extends DayEngine {
 		for (assignment in list)
 			if (assignment.hasAnyOverlap())
 				count++;
-		return Std.string(count);
+		return count;
 	}
 }

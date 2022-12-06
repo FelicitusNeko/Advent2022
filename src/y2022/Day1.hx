@@ -1,5 +1,7 @@
 package y2022;
 
+import y2022.DayEngine.TestData;
+
 var testData = [
 	'1000
 2000
@@ -21,16 +23,16 @@ var testData = [
 
 class Day1 extends DayEngine {
 	public static function make(data:String) {
-		var tests = testData.map(i -> {
+		var tests:Array<TestData> = testData.map(i -> {
 			return {
 				data: i,
-				expected: ["24000", "45000"]
+				expected: [24000, 45000]
 			}
 		});
 		new Day1(data, 1, tests);
 	}
 
-	function problem1(data:String):Null<String> {
+	function problem1(data:String) {
 		var list = data.split("\n").map(d -> d == "" ? null : Std.parseInt(d));
 		var cur = 0, most = 0;
 
@@ -43,10 +45,10 @@ class Day1 extends DayEngine {
 				cur += d;
 		}
 
-		return Std.string(most);
+		return most;
 	}
 
-	function problem2(data:String):Null<String> {
+	function problem2(data:String) {
 		var list = data.split("\n").map(d -> d == "" ? null : Std.parseInt(d));
 		var cur = 0, most = [0, 0, 0];
 
@@ -68,6 +70,6 @@ class Day1 extends DayEngine {
 		for (_ => mostx in most)
 			cur += mostx;
 
-		return Std.string(cur);
+		return cur;
 	}
 }

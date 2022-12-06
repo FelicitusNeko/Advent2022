@@ -127,7 +127,7 @@ class Day2 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: ["15", "12"]
+				expected: [15, 12]
 			}
 		});
 		new Day2(data, 2, tests);
@@ -138,7 +138,7 @@ class Day2 extends DayEngine {
 		var total = 0;
 		for (shoot in shoots)
 			total += shoot.score;
-		return Std.string(total);
+		return total;
 	}
 
 	function problem2(data:String) {
@@ -146,6 +146,6 @@ class Day2 extends DayEngine {
 		var total = 0;
 		for (shoot in shoots)
 			total += shoot.score;
-		return Std.string(total);
+		return total;
 	}
 }

@@ -5,13 +5,14 @@ import haxe.Http;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import y2022.DayEngine;
+
 import y2022.Day1;
 import y2022.Day2;
 import y2022.Day3;
 import y2022.Day4;
 import y2022.Day5;
 import y2022.Day6;
+import y2022.Day7;
 
 using StringTools;
 using tink.CoreApi;
@@ -32,7 +33,9 @@ class Main {
 		this.year = year == null ? today.getFullYear() : year;
 		this.day = day == null ? today.getDate() : day;
 
-		var funcMap:Map<Int, Array<AdventMakeFunc>> = [2022 => [Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make]];
+		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
+			2022 => [Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make]
+		];
 
 		getInput().handle(data -> {
 			funcMap[this.year][this.day - 1](data);
@@ -63,9 +66,5 @@ class Main {
 			h.onError = e -> throw new Exception('HTTP error: $e');
 			h.request();
 		});
-	}
-
-	function dummy(data:String) {
-		return "dummy";
 	}
 }

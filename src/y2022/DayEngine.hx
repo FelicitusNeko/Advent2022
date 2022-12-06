@@ -7,7 +7,7 @@ using StringTools;
 
 typedef TestData = {
 	var data:String;
-	var expected:Array<Null<String>>;
+	var expected:Array<Dynamic>;
 }
 
 abstract class DayEngine {
@@ -50,7 +50,7 @@ abstract class DayEngine {
 		}
 	}
 
-	abstract function problem1(data:String):Null<String>;
+	abstract function problem1(data:String):Null<Dynamic>;
 
-	abstract function problem2(data:String):Null<String>;
+	abstract function problem2(data:String):Null<Dynamic>;
 }
