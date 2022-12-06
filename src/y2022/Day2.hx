@@ -4,7 +4,14 @@ import haxe.Exception;
 
 using StringTools;
 
-enum abstract RPSSymbol(Int) {
+var testData = [
+	'A Y
+B X
+C Z
+'
+];
+
+enum abstract RPSSymbol(Int) to Int {
 	var Rock = 1;
 	var Paper = 2;
 	var Scissors = 3;
@@ -19,7 +26,7 @@ enum abstract RPSSymbol(Int) {
 		}
 }
 
-enum abstract RPSResult(Int) {
+enum abstract RPSResult(Int) to Int {
 	var Lose = 0;
 	var Draw = 3;
 	var Win = 6;
@@ -34,22 +41,28 @@ enum abstract RPSResult(Int) {
 		}
 }
 
-typedef IRPSShoot = {
-	var you:RPSSymbol;
-	var me:RPSSymbol;
+enum OtherIs {
+	Me;
+	Result;
 }
 
-@:forward
+typedef IRPSShoot = {
+	var you:RPSSymbol;
+	var other:String;
+	var otherIs:OtherIs;
+}
+
+@:forward(you)
 abstract RPSShoot(IRPSShoot) from IRPSShoot {
-	public function new(you:RPSSymbol, me:RPSSymbol) {
-		this = {you: you, me: me};
+	public function new(you:RPSSymbol, other:String, otherIs:OtherIs) {
+		this = {you: you, other: other, otherIs: otherIs};
 	}
 
+	public var me(get, never):RPSSymbol;
 	public var result(get, never):RPSResult;
 	public var score(get, never):Int;
 
-	@:from
-	public static function fromString(data:String) {
+	public static function fromData(data:String, otherIs:OtherIs) {
 		var symbols = ~/^([A-C]) ([X-Z])$/;
 
 		if (symbols.match(data))
@@ -58,99 +71,78 @@ abstract RPSShoot(IRPSShoot) from IRPSShoot {
 				case "B": Paper;
 				case "C": Scissors;
 				default: throw new Exception('Invalid [you] symbol ${symbols.matched(1)}');
-			}, switch (symbols.matched(2)) {
+			}, symbols.matched(2), otherIs);
+		else
+			throw new Exception('Invalid RPS data "$data"');
+	}
+
+	@:to
+	public function toString()
+		return 'Your ${this.you} vs my ${me} results in a ${result} for ${score} point(s)';
+
+	function get_me() {
+		if (this.otherIs == Me)
+			return switch (this.other) {
 				case "X": Rock;
 				case "Y": Paper;
 				case "Z": Scissors;
-				default: throw new Exception('Invalid [me] symbol ${symbols.matched(2)}');
-			});
-		else
-			throw new Exception('Invalid RPS data "$data"');
+				default: throw new Exception('Invalid [me] symbol ${this.other}');
+			}
+		else {
+			var you:Int = this.you;
+			var me = switch (result) {
+				case Draw: you;
+				case Win: you % 3 + 1;
+				case Lose: you == 1 ? 3 : you - 1;
+				default: throw new Exception('Invalid result value ${result}');
+			}
+			return cast(me, RPSSymbol);
+		};
 	}
-
-	@:to
-	public function toString()
-		return 'Your ${this.you} vs my ${this.me} results in a ${result} for ${score} point(s)';
 
 	function get_result() {
-		if (this.you == this.me)
-			return Draw;
-		else if (cast(this.you, Int) - 1 == cast(this.me, Int) % 3)
-			return Lose;
-		else if (cast(this.me, Int) - 1 == cast(this.you, Int) % 3)
-			return Win;
-		else
-			throw new Exception('Invalid result while trying to evalulate ${this.you} vs ${this.me}');
-	}
-
-	function get_score()
-		return cast(this.me, Int) + cast(result, Int);
-}
-
-typedef IRPSShoot2 = {
-	var you:RPSSymbol;
-	var result:RPSResult;
-}
-
-@:forward
-abstract RPSShoot2(IRPSShoot2) from IRPSShoot2 {
-	public function new(you:RPSSymbol, result:RPSResult) {
-		this = {you: you, result: result};
-	}
-
-	public var me(get, never):RPSSymbol;
-	public var score(get, never):Int;
-
-	@:from
-	public static function fromString(data:String) {
-		var symbols = ~/^([A-C]) ([X-Z])$/;
-
-		if (symbols.match(data))
-			return new RPSShoot2(switch (symbols.matched(1)) {
-				case "A": Rock;
-				case "B": Paper;
-				case "C": Scissors;
-				default: throw new Exception('Invalid [you] symbol ${symbols.matched(1)}');
-			}, switch (symbols.matched(2)) {
+		if (this.otherIs == Result)
+			return switch (this.other) {
 				case "X": Lose;
 				case "Y": Draw;
 				case "Z": Win;
-				default: throw new Exception('Invalid [result] symbol ${symbols.matched(2)}');
-			});
+				default: throw new Exception('Invalid [result] symbol ${this.other}');
+			}
+		else if (this.you == me)
+			return Draw;
+		else if (this.you - 1 == me % 3)
+			return Lose;
+		else if (me - 1 == this.you % 3)
+			return Win;
 		else
-			throw new Exception('Invalid RPS data "$data"');
+			throw new Exception('Invalid result while trying to evalulate ${this.you} vs ${me}');
 	}
 
-	@:to
-	public function toString()
-		return 'Your ${this.you} vs my ${me} results in a ${this.result} for ${score} point(s)';
-
-  function get_me() {
-    var you = cast(this.you, Int);
-    var me = switch(this.result) {
-      case Draw: you;
-      case Win: you % 3 + 1;
-      case Lose: you == 1 ? 3 : you - 1;
-      default: throw new Exception('Invalid result value ${this.result}');
-    }
-    return cast(me, RPSSymbol);
-  }
-
 	function get_score()
-		return cast(me, Int) + cast(this.result, Int);
+		return 0 + me + result;
 }
 
-class Day2 {
-	public static function problem1(data:String) {
-		var shoots = data.trim().split("\n").map(d -> RPSShoot.fromString(d));
+class Day2 extends DayEngine {
+	public static function make(data:String) {
+		var tests = testData.map(i -> {
+			return {
+				data: i,
+				expected: ["15", "12"]
+			}
+		});
+		new Day2(data, 2, tests);
+	}
+
+	function problem1(data:String) {
+		var shoots = data.trim().split("\n").map(d -> RPSShoot.fromData(d, Me));
 		var total = 0;
 		for (shoot in shoots)
 			total += shoot.score;
 		return Std.string(total);
 	}
 
-	public static function problem2(data:String) {
-		var shoots = data.trim().split("\n").map(d -> RPSShoot2.fromString(d));
+	function problem2(data:String) {
+		var shoots = data.trim().split("\n").map(d -> RPSShoot.fromData(d, Result));
 		var total = 0;
 		for (shoot in shoots)
 			total += shoot.score;

@@ -4,6 +4,19 @@ import haxe.Exception;
 
 using StringTools;
 
+var testData = [
+	'    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+'
+];
+
 typedef StackInstruction = {
 	var qty:Int;
 	var from:Int;
@@ -14,7 +27,7 @@ class StackRunner {
 	var stacks:Array<Array<String>> = [];
 	var instructions:Array<StackInstruction> = [];
 
-  public var stackTops(get, never):String;
+	public var stackTops(get, never):String;
 
 	public function new(data:String) {
 		var parts = data.rtrim().split("\n\n");
@@ -50,39 +63,50 @@ class StackRunner {
 		});
 	}
 
-  public function runOneByOne() {
-    for (instruction in instructions)
-      for (_ in 0...instruction.qty)
-        stacks[instruction.to - 1].push(stacks[instruction.from - 1].pop());
-  }
+	public function runOneByOne() {
+		for (instruction in instructions)
+			for (_ in 0...instruction.qty)
+				stacks[instruction.to - 1].push(stacks[instruction.from - 1].pop());
+	}
 
-  public function runMultiple() {
-    for (instruction in instructions){
-      var buf:Array<String> = [];
-      for (_ in 0...instruction.qty)
-        buf.push(stacks[instruction.from - 1].pop());
-      while (buf.length > 0) 
-        stacks[instruction.to - 1].push(buf.pop());
-    }
-  }
+	public function runMultiple() {
+		for (instruction in instructions) {
+			var buf:Array<String> = [];
+			for (_ in 0...instruction.qty)
+				buf.push(stacks[instruction.from - 1].pop());
+			while (buf.length > 0)
+				stacks[instruction.to - 1].push(buf.pop());
+		}
+	}
 
-  function get_stackTops() {
-    var retval = "";
-    for (stack in stacks) retval += stack[stack.length - 1];
-    return retval;
-  }
+	function get_stackTops() {
+		var retval = "";
+		for (stack in stacks)
+			retval += stack[stack.length - 1];
+		return retval;
+	}
 }
 
-class Day5 {
-	public static function problem1(data:String) {
+class Day5 extends DayEngine {
+	public static function make(data:String) {
+		var tests = testData.map(i -> {
+			return {
+				data: i,
+				expected: ["CMZ", "MCD"]
+			}
+		});
+		new Day5(data, 5, tests);
+	}
+
+	function problem1(data:String) {
 		var runner = new StackRunner(data);
-    runner.runOneByOne();
+		runner.runOneByOne();
 		return runner.stackTops;
 	}
 
-	public static function problem2(data:String) {
+	function problem2(data:String) {
 		var runner = new StackRunner(data);
-    runner.runMultiple();
+		runner.runMultiple();
 		return runner.stackTops;
 	}
 }

@@ -1,9 +1,21 @@
 package y2022;
 
+import y2022.DayEngine.TestData;
 using StringTools;
 
-class Day6 {
-	public static function problem1(data:String) {
+class Day6 extends DayEngine {
+	public static function make(data:String) {
+		var tests:Array<TestData> = [
+			{data: "mjqjpqmgbljsphdztnvjfqwrcgsmlb", expected: ["7", "19"]},
+			{data: "bvwbjplbgvbhsrlpgdmjqwftvncz", expected: ["5", "23"]},
+			{data: "nppdvjthqldpwncqszvftbrmjlhg", expected: ["6", "23"]},
+			{data: "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", expected: ["10", "29"]},
+			{data: "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", expected: ["11", "26"]}
+		];
+		new Day6(data, 6, tests);
+	}
+
+	function problem1(data:String) {
 		var list = data.rtrim().split("");
 		var buf:Array<String> = [];
 
@@ -26,10 +38,10 @@ class Day6 {
 				return Std.string(x+1);
 		}
 
-		return "Not found";
+		return null;
 	}
 
-	public static function problem2(data:String) {
+	function problem2(data:String) {
 		var list = data.rtrim().split("");
 		var buf:Array<String> = [];
 
@@ -52,6 +64,6 @@ class Day6 {
 				return Std.string(x+1);
 		}
 
-		return "Not found";
+		return null;
 	}
 }
