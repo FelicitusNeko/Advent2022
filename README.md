@@ -12,7 +12,7 @@ Add two files:
 
 The program will then retrieve input data and store it in cache, under `/cache/[year]/[day].txt`.
 
-**Note:** If you attempt to retrieve data for a day that has not yet been released, the cached file will be a notice that the data is not yet available, rather than the actual puzzle input. The program does not check for this, so you will need to delete the file from cache manually.
+**Note:** If you attempt to retrieve data for a day that has not yet been released, the program will attempt to detect this, and throw an error if it does. If it fails, the cached file will be a notice that the data is not yet available, rather than the actual puzzle input. The program does not check for this subsequently, so you will need to delete the file from cache manually.
 
 ## Manual retrieval
 

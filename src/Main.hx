@@ -60,6 +60,7 @@ class Main {
 			h.addHeader("User-Agent", USERAGENT);
 			h.addHeader("Cookie", 'session=$COOKIE');
 			h.onData = d -> {
+				if (d.startsWith("Please don't repeatedly request")) throw "Puzzle input not available yet";
 				File.saveContent(cacheFile, d);
 				f(d);
 			};
