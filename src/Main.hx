@@ -61,6 +61,7 @@ class Main {
 			h.addHeader("Cookie", 'session=$COOKIE');
 			h.onData = d -> {
 				if (d.startsWith("Please don't repeatedly request")) throw "Puzzle input not available yet";
+				if (d.startsWith("Puzzle inputs differ by user")) throw "Authentication failed";
 				File.saveContent(cacheFile, d);
 				f(d);
 			};
