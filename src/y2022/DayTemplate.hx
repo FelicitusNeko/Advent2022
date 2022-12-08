@@ -9,7 +9,7 @@ class Day extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: ["", ""]
+				expected: []
 			}
 		});
 		new Day(data, 0, tests);
@@ -17,11 +17,11 @@ class Day extends DayEngine {
 
   function problem1(data:String) {
     var list = data.rtrim().split("\n");
-		return Std.string("");
+		return null;
   }
 
   function problem2(data:String) {
     var list = data.rtrim().split("\n");
-		return Std.string("");
+		return null;
   }
 }
