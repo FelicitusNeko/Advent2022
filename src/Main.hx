@@ -1,5 +1,6 @@
 package;
 
+import y2022.Day8;
 import haxe.Exception;
 import haxe.Http;
 import haxe.io.Path;
@@ -34,7 +35,7 @@ class Main {
 		this.day = day == null ? today.getDate() : day;
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
-			2022 => [Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make]
+			2022 => [Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make, Day8.make]
 		];
 
 		getInput().handle(data -> {
