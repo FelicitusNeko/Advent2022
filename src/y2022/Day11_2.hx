@@ -1,5 +1,6 @@
 package y2022;
 
+import haxe.Exception;
 import haxe.ds.ArraySort;
 
 using StringTools;
@@ -40,9 +41,43 @@ typedef Throw = {
 	var dest:Int;
 }
 
-enum WorryOp {
-	Add(lhs:Null<Int>, rhs:Null<Int>);
-	Mult(lhs:Null<Int>, rhs:Null<Int>);
+enum IWorryOp {
+	Add(rhs:Int);
+	Mult(rhs:Int);
+	Square;
+}
+
+abstract WorryOp(IWorryOp) from IWorryOp to IWorryOp {
+	public function new(op:IWorryOp)
+		this = op;
+
+	@:from
+	public static function fromString(op:String) {
+		var pattern = ~/old ([+*]) (old|\d+)/;
+		if (pattern.match(op)) {
+			var rhs = pattern.matched(2);
+			return switch (pattern.matched(1)) {
+				case "+": new WorryOp(Add(Std.parseInt(rhs)));
+				case "*": new WorryOp(rhs == "old" ? Square : Mult(Std.parseInt(rhs)));
+				case x: throw 'Invalid operand $x';
+			}
+		} else throw 'Invalid operation $op';
+	}
+
+	@:to
+	public inline function toString()
+		return "old " + switch (this) {
+			case Add(rhs): '+ $rhs';
+			case Mult(rhs): '* $rhs';
+			case Square: "* old";
+		}
+
+	public function apply(lhs:Int)
+		return switch (this) {
+			case Add(rhs): lhs + rhs;
+			case Mult(rhs): lhs * rhs;
+			case Square: lhs * lhs;
+		}
 }
 
 class Monkey {
@@ -60,34 +95,33 @@ class Monkey {
 	public var business(default, null) = 0;
 
 	public function new(data:String, superWorry = false) {
-		var pattern = ~/Monkey (\d+):\s+Starting items: ([\d ,]+\s+Operation: new = (old|\d+) ([+\-*\/])) (old|\d+)\s+Test: divisible by (\d+)\s+If true: throw to monkey (\d+)\s+If false: throw to monkey (\d+)/;
+		var pattern = ~/Monkey (\d+):\s+Starting items: ([\d ,]+\s+Operation: new = old ([+\-*\/])) (old|\d+)\s+Test: divisible by (\d+)\s+If true: throw to monkey (\d+)\s+If false: throw to monkey (\d+)/;
 		if (pattern.match(data)) {
 			/*
 				0: Full string
 				1: Monkey ID
 				2: List of starting items
-				3: First value
-				4: Operand
-				5: Second value
-				6: Test condition
-				7: If true dest
-				8: If false dest
+				3: Operand
+				4: Second value
+				5: Test condition
+				6: If true dest
+				7: If false dest
 			 */
 			id = Std.parseInt(pattern.matched(1));
 			items = pattern.matched(2).split(", ").map(Std.parseInt);
 
-			var lhs = pattern.matched(3), rhs = pattern.matched(5);
-			worryOp = switch (pattern.matched(4)) {
-				case "+": Add(lhs == "old" ? null : Std.parseInt(lhs), rhs == "old" ? null : Std.parseInt(rhs));
-				case "*": Mult(lhs == "old" ? null : Std.parseInt(lhs), rhs == "old" ? null : Std.parseInt(rhs));
+			var rhs = pattern.matched(4);
+			worryOp = switch (pattern.matched(3)) {
+				case "+": Add(Std.parseInt(rhs));
+				case "*": rhs == "old" ? Square : Mult(Std.parseInt(rhs));
 				case x: throw 'Invalid operand $x for monkey $id';
 			}
 
 			this.superWorry = superWorry;
 
-			testDivisor = Std.parseInt(pattern.matched(6));
-			destTrue = Std.parseInt(pattern.matched(7));
-			destFalse = Std.parseInt(pattern.matched(8));
+			testDivisor = Std.parseInt(pattern.matched(5));
+			destTrue = Std.parseInt(pattern.matched(6));
+			destFalse = Std.parseInt(pattern.matched(7));
 		} else
 			throw 'Invalid data for ${data.split("\n").shift()}';
 	}
@@ -98,20 +132,7 @@ class Monkey {
 			return null;
 		business++;
 
-		var newWorry = switch (worryOp) {
-			case Add(lhs, rhs):
-				if (lhs == null)
-					lhs = item;
-				if (rhs == null)
-					rhs = item;
-				lhs + rhs;
-			case Mult(lhs, rhs):
-				if (lhs == null)
-					lhs = item;
-				if (rhs == null)
-					rhs = item;
-				lhs * rhs;
-		};
+		var newWorry = worryOp.apply(item);
 		if (!superWorry)
 			newWorry = Math.floor(newWorry / 3);
 
@@ -125,15 +146,25 @@ class Monkey {
 		items.push(item);
 
 	public inline function toString()
-		return
-			'Monkey $id:\n  Current items: ${items.join(", ")}\n  Operation: new = $worryOp\n  Test: divisible by $testDivisor\n    If true: throw to monkey $destTrue\n    If false: throw to monkey $destFalse';
+		return 'Monkey $id:
+  Current items: ${items.join(", ")}
+  Operation: new = $worryOp
+  Test: divisible by $testDivisor
+    If true: throw to monkey $destTrue
+    If false: throw to monkey $destFalse
+  Amount of business: $business';
 }
 
 class MonkeyGroup {
 	public var monkeys(get, null):Array<Monkey>;
 
+	var mod = 1;
+
 	public function new(data:String, superWorry = false) {
 		monkeys = data.rtrim().split("\n\n").map(i -> new Monkey(i, superWorry));
+		for (monkey in monkeys)
+			mod *= monkey.testDivisor;
+		trace('Mod is $mod');
 	}
 
 	inline function get_monkeys()
@@ -150,7 +181,7 @@ class MonkeyGroup {
 		for (monkey in monkeys) {
 			var throwData:Throw;
 			while ((throwData = monkey.checkAndChuck()) != null) {
-				findMonkey(throwData.dest).give(throwData.item);
+				findMonkey(throwData.dest).give(throwData.item % mod);
 			}
 		}
 	}
@@ -164,7 +195,7 @@ class Day11_2 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: [10605]
+				expected: [10605, 2713310158]
 			}
 		});
 		new Day11_2(data, 11, tests);
@@ -174,10 +205,7 @@ class Day11_2 extends DayEngine {
 		var group = new MonkeyGroup(data);
 		// Sys.println(group.toString());
 		// if (Sys.getChar(false) == 3)
-		// 	return null;
-		var mod = 1;
-		for (monkey in group.monkeys)
-			mod *= monkey.testDivisor;
+		//   return null;
 		for (_ in 0...20) {
 			group.runRound();
 			// Sys.println(group.toString());
@@ -191,7 +219,38 @@ class Day11_2 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		var list = data.rtrim().split("\n");
-		return null;
+		var group = new MonkeyGroup(data, true);
+		var test = [
+			[2, 4, 3, 6],
+			[99, 97, 8, 103],
+			[5204, 4792, 199, 5192],
+			[10419, 9577, 392, 10391],
+			[15638, 14358, 587, 15593]
+		], testPoints = [0, 19, 999, 1999, 2999];
+		for (x in 0...10000) {
+			group.runRound();
+			if (testPoints.contains(x)) {
+				var good = true;
+				var testGroup = test[testPoints.indexOf(x)],
+					testBusiness = group.monkeys.map(i -> i.business);
+				for (y => testNum in testGroup)
+					try
+						Sure.sure(testBusiness[y] == testNum)
+					catch (e:Exception) {
+						Sys.println(e.message);
+						good = false;
+					}
+				if (!good) {
+					Sys.println('$testGroup (exp.) did not match $testBusiness (act.) at round ${x + 1}');
+					return null;
+				}
+			}
+		}
+
+		var business = group.monkeys.map(i -> i.business);
+		trace(business);
+		ArraySort.sort(business, (lhs, rhs) -> lhs - rhs);
+
+		return business.pop() * business.pop();
 	}
 }
