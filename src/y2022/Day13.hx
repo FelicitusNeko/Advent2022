@@ -32,7 +32,6 @@ var testData = [
 '
 ];
 
-// typedef DistressData = Array<Int|DistressData>;
 typedef IDataPair = {
 	var first:Array<Dynamic>;
 	var second:Array<Dynamic>;
@@ -65,11 +64,9 @@ class Day13 extends DayEngine {
 	}
 
 	function determineOrder(first:Array<Dynamic>, second:Array<Dynamic>) {
-		// Pair 2: Compare [[1],[2,3,4]] vs [[1],4]
 		var fc = first.slice(0), sc = second.slice(0);
 		var fi:Dynamic, si:Dynamic;
 
-		// if (debug != null) trace('P$debug: checking $fc vs $sc');
 		while (fc.length > 0 && sc.length > 0) {
 			fi = fc.shift();
 			si = sc.shift();
@@ -77,8 +74,6 @@ class Day13 extends DayEngine {
 			var firstIsNum = Std.isOfType(fi, Int),
 				secondIsNum = Std.isOfType(si, Int);
 			if (firstIsNum != secondIsNum) {
-				// if (debug != null)
-				// 	trace('P$debug: Type mismatch ($fi vs $si), converting ${firstIsNum ? "first" : "second"} item to array');
 				if (firstIsNum)
 					fi = [fi];
 				else
@@ -86,55 +81,29 @@ class Day13 extends DayEngine {
 				firstIsNum = secondIsNum = false;
 			}
 			if (firstIsNum) {
-				// if (debug != null)
-				// 	trace('P$debug: Checking for $fi <=> $si');
-				if (fi < si) {
-					// if (debug != null)
-					// 	trace('✅Check passed $fi < $si on pair $debug');
+				if (fi < si)
 					return -1;
-				} else if (fi > si) {
-					// if (debug != null)
-					// 	trace('❌Check failed $fi > $si on pair $debug');
+				else if (fi > si)
 					return 1;
-				}
-			} else {
-				// if (debug != null)
-				// 	trace('P$debug: Recursing determineOrder');
+			} else
 				switch (determineOrder(fi, si)) {
 					case 0:
-						// if (debug != null)
-						// 	trace('P$debug: Recursive determineOrder was inconclusive, continuing');
 					case x = 1 | -1:
-						// if (debug != null)
-						// 	trace('P$debug: Recursive determineOrder returned $x');
 						return x;
 				}
-			}
 		}
 
-		// if (debug != null) {
-		// 	if (fc.length > 0)
-		// 		trace('❌First line did not run out first on pair $debug');
-		// 	else if (sc.length > 0)
-		// 		trace('✅First line ran out first on pair $debug');
-		// 	else
-		// 		trace('P$debug: Both lines ran out; check continues');
-		// 	trace('P$debug: Returning ${fc.length == 0 ? (sc.length == 0 ? null : true) : false} at end of function');
-		// }
 		return fc.length == 0 ? (sc.length == 0 ? 0 : -1) : 1;
 	}
 
 	function problem1(data:String) {
 		var pairs = data.rtrim().split("\n\n").map(DataPair.fromString);
-		// trace(pairs);
 		var correctOrder:Array<Int> = [];
 		for (x => pair in pairs)
 			if (determineOrder(pair.first, pair.second) != 1) {
-				// trace('✅✅Valid pair on pair ${x + 1}');
 				correctOrder.push(x + 1);
 			}
 
-		// trace(correctOrder);
 		var retval = 0;
 		for (order in correctOrder)
 			retval += order;
@@ -144,9 +113,9 @@ class Day13 extends DayEngine {
 	function problem2(data:String) {
 		var list:Array<Dynamic> = data.rtrim().split("\n").filter(i -> i.length > 0).map(Json.parse);
 		var dividers = [[[2]], [[6]]];
-		for (divider in dividers) list.push(divider);
+		for (divider in dividers)
+			list.push(divider);
 		ArraySort.sort(list, determineOrder);
-		//trace(Json.stringify(list.map(i -> Json.stringify(i)), null, "  "));
 		return (list.indexOf(dividers[0]) + 1) * (list.indexOf(dividers[1]) + 1);
 	}
 }
