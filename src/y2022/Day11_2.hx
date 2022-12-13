@@ -1,7 +1,6 @@
 package y2022;
 
 import haxe.Int64;
-import haxe.Exception;
 import haxe.ds.ArraySort;
 
 using StringTools;
