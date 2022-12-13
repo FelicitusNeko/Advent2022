@@ -1,7 +1,7 @@
 package y2022;
 
 import haxe.ds.ArraySort;
-import y2022.Day9.Point;
+import utils.Point;
 
 using StringTools;
 
