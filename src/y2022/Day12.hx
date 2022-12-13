@@ -2,7 +2,6 @@ package y2022;
 
 import haxe.Unserializer;
 import haxe.Serializer;
-import haxe.ds.ArraySort;
 import utils.Point;
 
 using StringTools;
@@ -195,47 +194,55 @@ class HeightMap {
 				if (movesHere.length > 0)
 					moves['$x:$y'] = movesHere;
 			}
-
-		// var countMoves = 0;
-		// for (space in moves)
-		// 	for (_ in space)
-		// 		countMoves++;
-		// trace('$countMoves valid moves'); // 111
 	}
 
 	public function pathForward(?start:Point) {
-		if (isReverse != false)
-			throw "Saved scan is not for forward moves";
+		// We're gonna use the Dijkstra method for this
+		if (isReverse != false) scanForward();
+		// Also part 2 has a mobile start point; if one is not provided, use the one provided by the input
 		if (start == null)
 			start = this.start;
 
+		// The processing queue starts at the start point (go figure)
 		var queue = [start];
+		// And the best distance from start to start is always 0
 		map[start.y][start.x].bestDist = 0;
 
 		while (queue.length > 0) {
+			// Grab the next position from the queue
 			var pos = queue.shift();
 			var here = map[pos.y][pos.x];
+			// If there are no valid moves saved for this position (which shouldn't happen, but just in case) keep going
 			if (!moves.exists(pos))
 				continue;
 			for (move in moves[pos]) {
+				// Assume the destination point exists, and save it to a var
 				var dpos:Point = move.calcPos(pos), dpt = map[dpos.y][dpos.x];
+				// If we haven't seen the destination position before:
 				if (dpt.bestDist == null) {
+					// Add it to the queue
 					queue.push(dpos);
+					// And don't process the move back to the current position (if it's valid)
 					moves[dpos] = moves[dpos].filter(i -> i != move.reverseDir());
+					// We don't have any other distance for the destination, so just assign it something
 					dpt.bestDist = here.bestDist + 1;
 				} else
+					// See if (to here) + 1 is better than the best distance to the destination; if so, update it
 					dpt.bestDist = Math.round(Math.min(dpt.bestDist, here.bestDist + 1));
 			}
 		}
 
+		// Return the best distance to the end point, if we even reached it
 		return map[end.y][end.x].bestDist;
 	}
 
 	public function pathAllForward() {
-		if (isReverse != false)
-			throw "Saved scan is not for forward moves";
+		if (isReverse != false) scanForward();
+		// Serialise the move list, 'cause we're gonna be running lots of simulations
 		var savedMoves = Serializer.run(moves);
+		// Best solution for now is just gonna be a big number for convenience (otherwise we'd use Null<Int> and that adds mess we can avoid)
 		var bestSolution = 9999999;
+		// Build a candidate list of every location on the map with 'a' height
 		var candidates:Array<Point> = [];
 		for (y => row in map)
 			for (x => pt in row)
@@ -243,24 +250,31 @@ class HeightMap {
 					candidates.push({x: x, y: y});
 
 		while (candidates.length > 0) {
+			// Wipe out the entire table of best distances
 			for (row in map)
 				for (pt in row)
 					pt.bestDist = null;
 
+			// Run pathForward on the first candidate in the list
 			switch (pathForward(candidates.shift())) {
-				case null:
+				case null: // We didn't find the end
+					// That means we probably found a bunch of other candidates that'll have the same result, so let's take them off the list
 					var antiCandidates:Array<String> = [];
 					for (y => row in map)
 						for (x => pt in row)
+							// If a space has a best distance assigned, assume that it's not gonna go anywhere
 							if (pt.bestDist != null)
 								antiCandidates.push('$x:$y');
 					candidates = candidates.filter(i -> !antiCandidates.contains(i));
-				case x:
+				case x: // We got to the end (store the result in x 'cause Haxe is cool like that)
+					// If it's the best score we've found, save it
 					bestSolution = Math.round(Math.min(bestSolution, x));
 			}
+			// Deserialise the move list to restore it to how it was before starting
 			moves = Unserializer.run(savedMoves);
 		}
 
+		// Return the best solution we were able to find (or 9999999 if we never once got to the end)
 		return bestSolution;
 	}
 
@@ -274,7 +288,7 @@ class HeightMap {
 				else if (end.x == x && end.y == y)
 					rowChars += "E";
 				else
-					rowChars += String.fromCharCode(pt + charCode_a);
+					rowChars += pt;
 			retval.push(rowChars);
 		}
 		return retval.join("\n");
