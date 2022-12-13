@@ -30,7 +30,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(null, null);
+		new Main(null, null); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
