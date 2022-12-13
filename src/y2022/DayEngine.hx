@@ -11,7 +11,7 @@ typedef TestData = {
 }
 
 abstract class DayEngine {
-	public function new(data:String, dayNum:Int, ?tests:Array<TestData>) {
+	public function new(data:String, dayNum:Int, ?tests:Array<TestData>, ?dontRun:Bool) {
 		for (x => problem in [problem1, problem2]) {
 			var pass = true;
 			Sys.print('Day ${dayNum} problem ${x + 1}: ');
@@ -25,7 +25,7 @@ abstract class DayEngine {
 						var testRun = problem(test.data);
 						if (testRun == null || testRun == "") {
 							pass = false;
-							Sys.println('❔<Test #${y+1} returned no data>');
+							Sys.println('❔<Test #${y + 1} returned no data>');
 							break;
 						}
 						sure(testRun == test.expected[x]);
@@ -40,13 +40,16 @@ abstract class DayEngine {
 					}
 				}
 			if (pass)
-				try {
-					var result = problem(data);
-					Sys.println(result == null || result == "" ? "<Did not return a value>" : result);
-				} catch (e:Exception) {
-					Sys.println('Execution failed on puzzle input and threw an exception');
-					Sys.println(e.details());
-				}
+				if (dontRun == true)
+					Sys.println("Tests passed");
+				else
+					try {
+						var result = problem(data);
+						Sys.println(result == null || result == "" ? "<Did not return a value>" : result);
+					} catch (e:Exception) {
+						Sys.println('Execution failed on puzzle input and threw an exception');
+						Sys.println(e.details());
+					}
 		}
 	}
 
