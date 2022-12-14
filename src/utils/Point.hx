@@ -7,11 +7,29 @@ typedef IPoint = {
 
 @:forward
 abstract Point(IPoint) from IPoint to IPoint {
+	public inline function new(x:Int, y:Int)
+		this = {
+			x: x,
+			y: y
+		};
+
 	@:to
-	public function toString()
+	public inline function toString()
 		return '${this.x}:${this.y}';
 
 	@:op(a == b)
-	public function isEqual(rhs:Point)
+	public inline function eqPoint(rhs:Point)
 		return this.x == rhs.x && this.y == rhs.y;
+
+	@:op(a != b)
+	public inline function neqPoint(rhs:Point)
+		return this.x != rhs.x || this.y != rhs.y;
+
+	@:generic
+	public inline function arrayGet<T>(array:Array<Array<T>>)
+		return array[this.y][this.x];
+
+	@:generic
+	public inline function arraySet<T>(array:Array<Array<T>>, value:T)
+		return (array[this.y][this.x] = value);
 }
