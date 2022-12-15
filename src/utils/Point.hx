@@ -13,6 +13,14 @@ abstract Point(IPoint) from IPoint to IPoint {
 			y: y
 		};
 
+	@:from
+	public static function fromString(str:String) {
+		var pattern = ~/^(-?\d+):(-?\d+)$/;
+		if (pattern.match(str)) 
+			return new Point(Std.parseInt(pattern.matched(1)), Std.parseInt(pattern.matched(2)));
+		else throw 'Invalid Point string "$str"';
+	}
+
 	@:to
 	public inline function toString()
 		return '${this.x}:${this.y}';
