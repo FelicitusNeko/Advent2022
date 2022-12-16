@@ -1,5 +1,6 @@
 package y2022;
 
+import haxe.Int64;
 import haxe.ds.ArraySort;
 import utils.HugeNumber;
 import utils.Point;
@@ -68,7 +69,7 @@ abstract Range(IRange) from IRange to IRange {
 
 class Day15 extends DayEngine {
 	public static function make(data:String) {
-		var expected:Array<Dynamic> = [26, "56,000,011"];
+		var expected:Array<Dynamic> = [26, Int64.ofInt(56000011)];
 		var tests = testData.map(i -> {
 			return {
 				data: i,
@@ -182,9 +183,8 @@ class Day15 extends DayEngine {
 					}
 				}
 				if (!intersect) {
-					trace('$x:$refY');
-					var result = HugeNumber.fromInt(x) * 4000000;
-					return (result + refY).toString();
+					//trace('$x:$refY');
+					return Int64.ofInt(x) * 4000000 + refY;
 				}
 				x++;
 			}
