@@ -301,7 +301,6 @@ class Day16 extends DayEngine {
 		var moveCache:Map<String, Array<ValveNode>> = [];
 
 		while (states.length > 0) {
-			Sys.sleep(.000001);
 			var state = states.shift();
 			while (state.moveCount < rules.maxMoves)
 				switch (state.makeMove()) {
