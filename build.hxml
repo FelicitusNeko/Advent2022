@@ -3,5 +3,6 @@
 -L tink_core
 -L sure
 -L helder.set
+-L safety
 -main Main
 --interp

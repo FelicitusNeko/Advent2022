@@ -34,7 +34,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(null, null); // Change to (year, day) - null will default to this year/day
+		new Main(null, 16); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
@@ -95,7 +95,7 @@ class Main {
 		var USERAGENT = File.getContent("./secrets/useragent");
 		var COOKIE = File.getContent("./secrets/session");
 		return Future.irreversible(f -> {
-			Sys.println("Retrieving today's data from server");
+			Sys.println('Retrieving today\'s data from server ($year day $day)');
 			var h = new Http('https://adventofcode.com/$year/day/$day/input');
 			h.addHeader("User-Agent", USERAGENT);
 			h.addHeader("Cookie", 'session=$COOKIE');
