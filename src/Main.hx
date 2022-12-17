@@ -1,7 +1,6 @@
 package;
 
 // import haxe.macro.Context;
-import y2022.Day16;
 import haxe.Exception;
 import haxe.Http;
 import haxe.io.Path;
@@ -22,6 +21,8 @@ import y2022.Day12;
 import y2022.Day13;
 import y2022.Day14;
 import y2022.Day15;
+import y2022.Day16;
+import y2022.Day17;
 
 using StringTools;
 using tink.CoreApi;
@@ -34,18 +35,20 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(null, 16); // Change to (year, day) - null will default to this year/day
+		new Main(null, null); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
 		var today = Date.now();
+		if (day == null && (today.getMonth() != 11 || today.getDate() > 25))
+			throw "Advent of Code is not in progress; please specify day";
 		this.year = year == null ? today.getFullYear() : year;
 		this.day = day == null ? today.getDate() : day;
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
 			2022 => [
 				Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make, Day8.make, Day9.make, Day10.make, Day11_2.make, Day12.make,
-				Day13.make, Day14.make, Day15.make, Day16.make
+				Day13.make, Day14.make, Day15.make, Day16.make, Day17.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
