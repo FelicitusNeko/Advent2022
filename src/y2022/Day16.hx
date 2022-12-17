@@ -88,7 +88,8 @@ abstract ValveNode(IValveNode) from IValveNode {
 					break;
 				}
 			}
-			if (pathBack == move[0]) throw 'Backstep node not found from ${pathBack.id} toward ${this.id}';
+			if (pathBack == move[0])
+				throw 'Backstep node not found from ${pathBack.id} toward ${this.id}';
 		}
 
 		return move;
@@ -126,46 +127,37 @@ typedef ValveRules = {
 typedef ValvePlayer = {
 	var curPos:ValveNode;
 	var moves:Array<ValveMove>;
-	var dest:Null<ValveNode>;
+	var queue:Array<ValveMove>;
 }
 
 typedef IValveState = {
-	var moves:Array<ValveMove>;
+	var players:Array<ValvePlayer>;
 	var valvesOn:Array<ValveNode>;
-	var curPos:ValveNode;
 	var total:Int;
 	var destQueue:Array<ValveNode>;
-	var ?parent:ValveState;
+}
+
+enum ValveMoveResult {
+	Good(moveCount:Int);
+	NeedInput(player:Int);
 }
 
 abstract ValveState(IValveState) from IValveState {
-	public var moves(get, never):Array<ValveMove>;
 	public var valvesOn(get, never):Array<ValveNode>;
-	public var curPos(get, never):ValveNode;
 	public var total(get, never):Int;
 	public var destQueue(get, never):Array<ValveNode>;
-	public var parent(get, never):Null<ValveState>; // if I even need this
 
 	public var ratePerMove(get, never):Int;
 	public var moveCount(get, never):Int;
 
-	inline function get_moves()
-		return this.moves.slice(0);
-
 	inline function get_valvesOn()
 		return this.valvesOn.slice(0);
-
-	inline function get_curPos()
-		return this.curPos;
 
 	inline function get_total()
 		return this.total;
 
 	inline function get_destQueue()
 		return this.destQueue.slice(0);
-
-	inline function get_parent()
-		return this.parent;
 
 	inline function get_ratePerMove() {
 		var retval = 0;
@@ -175,36 +167,74 @@ abstract ValveState(IValveState) from IValveState {
 	}
 
 	inline function get_moveCount()
-		return this.moves.length;
+		return this.players[0].moves.length;
 
-	public inline function getNextDest()
-		return this.destQueue.shift();
+	public function setDest(player:Int, dest:ValveNode, rules:ValveRules, ?cache:Map<String, Array<ValveNode>>) {
+		if (player < 0 || player > this.players.length - 1)
+			throw 'Player $player out of range 0-${this.players.length - 1}';
+		if (!this.destQueue.contains(dest))
+			throw 'Invalid destination ${dest.id}';
 
-	public inline function addMove(move:ValveMove, max:Int) {
-		if (moveCount >= max)
-			return false;
-		this.moves.push(move);
-		this.total += ratePerMove;
-		switch (move) {
-			case Open(node):
-				this.destQueue = this.destQueue.filter(i -> i != node);
-				this.valvesOn.push(node);
-			case MoveTo(node):
-				this.curPos = node;
-			default:
-		}
-		return true;
+		var p = this.players[player];
+		var moveDef = '${p.curPos.id}:${dest.id}';
+		var trajectory = cache.or([])[moveDef].or(dest.pathFrom(p.curPos));
+		if (cache != null && !cache.exists(moveDef))
+			cache[moveDef] = trajectory;
+		p.queue = [];
+		for (move in trajectory)
+			p.queue.push(MoveTo(move));
+		p.queue.push(Open(dest));
+		while (p.moves.length + p.queue.length > rules.maxMoves)
+			if (p.queue.pop() == null)
+				throw 'Unable to pop from queue'; // this shouldn't happen
+		this.destQueue = this.destQueue.filter(i -> i != dest);
 	}
 
-	public function clone(?parent:ValveState):IValveState {
-		return {
-			moves: moves,
+	public function makeMove() {
+		for (x => player in this.players)
+			if (player.queue.length == 0)
+				return NeedInput(x);
+		this.total += ratePerMove;
+		for (player in this.players) {
+			var move = player.queue.shift();
+			switch (move) {
+				case Open(node):
+					if (this.valvesOn.contains(node))
+						throw 'Trying to open already open node';
+					this.valvesOn.push(node);
+				case MoveTo(node):
+					player.curPos = node;
+				default:
+			}
+			player.moves.push(move);
+		}
+		return Good(moveCount);
+	}
+
+	public function stallOut(max:Int) {
+		while (moveCount < max)
+			switch makeMove() {
+				case NeedInput(player):
+					this.players[player].queue.push(NoOp);
+				case Good(_):
+			}
+	}
+
+	public function clone():IValveState {
+		var retval:IValveState = {
+			players: [],
 			valvesOn: valvesOn,
-			curPos: curPos,
 			total: total,
 			destQueue: destQueue,
-			parent: parent.or(this)
 		};
+		for (player in this.players)
+			retval.players.push({
+				curPos: player.curPos,
+				moves: player.moves.slice(0),
+				queue: player.queue.slice(0)
+			});
+
+		return retval;
 	}
 }
 
@@ -216,7 +246,7 @@ class Day16 extends DayEngine {
 				expected: [1651, 1707]
 			}
 		});
-		new Day16(data, 16, tests, true);
+		new Day16(data, 16, tests);
 	}
 
 	function buildMap(data:String) {
@@ -243,7 +273,7 @@ class Day16 extends DayEngine {
 
 		var nodeArray = [for (_ => node in nodes) node];
 		nodeArray.reverse();
-		//trace(nodeArray.map(i -> i.toString()).join("\n"));
+		// trace(nodeArray.map(i -> i.toString()).join("\n"));
 		return {
 			startNode: nodes["AA"],
 			nodes: nodeArray
@@ -254,9 +284,15 @@ class Day16 extends DayEngine {
 		var valueNodes = rules.nodes.filter(i -> i.flowRate > 0);
 		var states:Array<ValveState> = [
 			{
-				moves: [],
+				players: [
+					for (_ in 0...rules.players)
+						{
+							curPos: rules.startPos,
+							moves: [],
+							queue: []
+						}
+				],
 				valvesOn: [],
-				curPos: rules.startPos,
 				total: 0,
 				destQueue: valueNodes.slice(0)
 			}
@@ -265,33 +301,22 @@ class Day16 extends DayEngine {
 		var moveCache:Map<String, Array<ValveNode>> = [];
 
 		while (states.length > 0) {
+			Sys.sleep(.000001);
 			var state = states.shift();
-			for (dest in state.destQueue) {
-				var move = moveCache['${state.curPos.id}:${dest.id}'].or(dest.pathFrom(state.curPos));
-				moveCache['${state.curPos.id}:${dest.id}'] = move;
+			while (state.moveCount < rules.maxMoves)
+				switch (state.makeMove()) {
+					case NeedInput(player):
+						for (dest in state.destQueue) {
+							var newState:ValveState = state.clone();
+							newState.setDest(player, dest, rules, moveCache);
+							states.unshift(newState);
+						}
 
-				var newState:ValveState = state.clone();
-
-				for (node in move) {
-					for (_ in 1...rules.costPerMove)
-						newState.addMove(NoOp, rules.maxMoves);
-					newState.addMove(MoveTo(node), rules.maxMoves);
+						state.stallOut(rules.maxMoves);
+						if (best == null || (state.moveCount >= rules.maxMoves && state.total > best.total))
+							best = state;
+					case Good(_):
 				}
-				for (_ in 1...rules.costPerOpen)
-					newState.addMove(NoOp, rules.maxMoves);
-				newState.addMove(Open(dest), rules.maxMoves);
-
-				if (rules.maxMoves <= newState.moveCount) {
-					if (best == null || newState.total > best.total)
-						best = newState;
-				} else
-					states.unshift(newState);
-
-			}
-
-			while (state.addMove(NoOp, rules.maxMoves)) {};
-			if (best == null || (state.moveCount >= rules.maxMoves && state.total > best.total))
-				best = state;
 		}
 		return best;
 	}
@@ -311,7 +336,16 @@ class Day16 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		var list = data.rtrim().split("\n");
-		return null;
+		var parsed = buildMap(data);
+		var best = planJourney({
+			maxMoves: 26,
+			costPerMove: 1,
+			costPerOpen: 1,
+			nodes: parsed.nodes,
+			startPos: parsed.startNode,
+			players: 2
+		});
+
+		return cast(best == null ? null : best.total);
 	}
 }
