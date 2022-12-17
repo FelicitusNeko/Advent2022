@@ -38,7 +38,7 @@ class Day6 extends DayEngine {
 				return x + 1;
 		}
 
-		return null;
+		return cast null;
 	}
 
 	function problem2(data:String) {
@@ -63,6 +63,6 @@ class Day6 extends DayEngine {
 				return x + 1;
 		}
 
-		return null;
+		return cast null;
 	}
 }

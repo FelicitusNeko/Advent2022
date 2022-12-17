@@ -5,4 +5,5 @@
 -L helder.set
 -L safety
 -main Main
+#--cpp bin/cpp
 --interp
