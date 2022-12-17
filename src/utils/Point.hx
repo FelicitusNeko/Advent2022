@@ -33,6 +33,10 @@ abstract Point(IPoint) from IPoint to IPoint {
 	public inline function neqPoint(rhs:Point)
 		return this.x != rhs.x || this.y != rhs.y;
 
+	@:op(a + b)
+	public inline function addPoint(rhs:Point)
+		return new Point(this.x + rhs.x, this.y + rhs.y);
+
 	@:generic
 	public inline function arrayGet<T>(array:Array<Array<T>>)
 		return array[this.y][this.x];
