@@ -219,6 +219,8 @@ class Day17 extends DayEngine {
 
 	function problem2(data:String) {
 		var tetr = new RockTetris(data);
+		// lol fuck no that ain't gonna work
+		// or it will but not in my lifetime
 		for (_ in 0...1000000)
 			for (_ in 0...1000000)
 				tetr.dropBlock();
