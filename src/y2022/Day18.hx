@@ -1,9 +1,9 @@
 package y2022;
 
 import y2022.DayEngine.TestData;
-import utils.Point;
 
 using StringTools;
+using Safety;
 
 typedef IPoint3D = {
 	var x:Int;
@@ -39,6 +39,15 @@ abstract Point3D(IPoint3D) from IPoint3D {
 	@:to
 	public inline function toString()
 		return '${this.x},${this.y},${this.z}';
+
+	@:generic
+	public function arrayGet<T>(ar:Array<Array<Array<T>>>)
+		return ar[this.z].or([])[this.y].or([])[this.x];
+
+	@:generic
+	public function arraySet<T>(ar:Array<Array<Array<T>>>, value:T) {
+		return ar[this.z][this.y][this.x] = value;
+	}
 }
 
 typedef AdjacentData = {
@@ -47,26 +56,25 @@ typedef AdjacentData = {
 	var ?adjacentAir:Array<Point3D>;
 }
 
+enum SpaceType {
+	Undetermined;
+	OpenAir;
+	Lava;
+	Pocket;
+}
+
 class Day18 extends DayEngine {
+	public static final variants:Array<Point3D> = [
+		{x: 1, y: 0, z: 0},
+		{x: -1, y: 0, z: 0},
+		{x: 0, y: 1, z: 0},
+		{x: 0, y: -1, z: 0},
+		{x: 0, y: 0, z: 1},
+		{x: 0, y: 0, z: -1}
+	];
+
 	public static function make(data:String) {
 		var tests:Array<TestData> = [
-			{
-				data: '2,2,2
-1,2,2
-3,2,2
-2,1,2
-2,3,2
-2,2,1
-2,2,3
-2,2,4
-2,2,6
-1,2,5
-3,2,5
-2,1,5
-2,3,5
-',
-				expected: [64, 58]
-			},
 			{
 				data: '0,0,0
 0,0,1
@@ -104,6 +112,23 @@ class Day18 extends DayEngine {
 2,2,3
 ',
 				expected: [76, 66]
+			},
+			{
+				data: '2,2,2
+1,2,2
+3,2,2
+2,1,2
+2,3,2
+2,2,1
+2,2,3
+2,2,4
+2,2,6
+1,2,5
+3,2,5
+2,1,5
+2,3,5
+',
+				expected: [64, 58]
 			}
 
 		];
@@ -114,14 +139,6 @@ class Day18 extends DayEngine {
 		var map:Map<String, AdjacentData> = [];
 		for (drop in data.rtrim().split("\n"))
 			map.set(drop, {point: Point3D.ofString(drop), adjacent: []});
-		var variants:Array<Point3D> = [
-			{x: 1, y: 0, z: 0},
-			{x: -1, y: 0, z: 0},
-			{x: 0, y: 1, z: 0},
-			{x: 0, y: -1, z: 0},
-			{x: 0, y: 0, z: 1},
-			{x: 0, y: 0, z: -1}
-		];
 		for (_ => drop in map)
 			for (variant in variants) {
 				var check = (drop.point + variant).toString();
@@ -141,63 +158,58 @@ class Day18 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		var map:Map<String, AdjacentData> = [];
-		var airMap:Map<String, AdjacentData> = [];
-		var variants:Array<Point3D> = [
-			{x: 1, y: 0, z: 0},
-			{x: -1, y: 0, z: 0},
-			{x: 0, y: 1, z: 0},
-			{x: 0, y: -1, z: 0},
-			{x: 0, y: 0, z: 1},
-			{x: 0, y: 0, z: -1}
+		var mapData:Array<Point3D> = [for (drop in data.rtrim().split("\n")) drop];
+		var maxX = 0, maxY = 0, maxZ = 0;
+		for (drop in mapData) {
+			if (drop.x > maxX)
+				maxX = drop.x;
+			if (drop.y > maxY)
+				maxY = drop.y;
+			if (drop.z > maxZ)
+				maxZ = drop.z;
+		}
+
+		var map = [
+			for (_ in 0...maxZ + 1) [for (_ in 0...maxY + 1) [for (_ in 0...maxX + 1) Undetermined]]
 		];
+		var queue:Array<Point3D> = [];
+
+		for (w in 0...8) {
+			var pt:Point3D = {
+				x: w & 0x01 == 0x01 ? 0 : maxX,
+				y: w & 0x02 == 0x02 ? 0 : maxY,
+				z: w & 0x04 == 0x04 ? 0 : maxZ,
+			};
+			pt.arraySet(map, OpenAir);
+			queue.push(pt);
+		}
+
+		for (drop in mapData)
+			drop.arraySet(map, Lava);
+
+		while (queue.length > 0) {
+			var pt = queue.shift();
+			if (pt.arrayGet(map) != OpenAir) continue;
+			for (v in variants.map(i -> pt + i)) {
+				if (v.arrayGet(map) == Undetermined) {
+					queue.push(v);
+					v.arraySet(map, OpenAir);
+				}
+			}
+		}
+
+		for (z => lv in map)
+			for (y => row in lv)
+				for (x => pt in row)
+					if (pt == Undetermined)
+						map[z][y][x] = Pocket;
+
 		var total = 0;
-		
-		for (drop in data.rtrim().split("\n"))
-			map.set(drop, {point: Point3D.ofString(drop), adjacent: []});
-
-		for (_ => drop in map)
-			for (variant in variants) {
-				var checkPt = (drop.point + variant),
-					check = checkPt.toString();
-				if (map.exists(check)) {
-					var match = map[check];
-					if (!drop.adjacent.contains(match.point))
-						drop.adjacent.push(match.point);
-					if (!match.adjacent.contains(drop.point))
-						match.adjacent.push(drop.point);
-				} else {
-					if (!airMap.exists(check))
-						airMap.set(check, {point: checkPt, adjacent: [drop.point]});
-					else
-						airMap[check].adjacent.push(drop.point);
-				}
-			}
-		for (_ => drop in map)
-			total += 6 - drop.adjacent.length;
-
-		for (_ => air in airMap)
-			air.adjacentAir = [];
-
-		for (_ => air in airMap)
-			for (variant in variants) {
-				var checkPt = (air.point + variant),
-					check = checkPt.toString();
-				if (airMap.exists(check)) {
-					var match = airMap[check];
-					if (!air.adjacentAir.contains(match.point))
-						air.adjacentAir.push(match.point);
-					if (!match.adjacentAir.contains(air.point))
-						match.adjacentAir.push(air.point);
-				}
-			}
-
-		for (_ => air in airMap)
-			if (air.adjacent.length + air.adjacentAir.length == 6)
-				total -= air.adjacent.length;
+		for (drop in mapData)
+			for (v in variants.map(i -> drop + i))
+				if (v.arrayGet(map).or(OpenAir) == OpenAir)
+					total++;
 
 		return total;
-		// 2897 too high
-		// need to check for cubies inside a larger gap (in a 5×5×5 cube with 3×3×3 cube of air inside, there's a 1×1×1 untracked space which would throw off the count)
 	}
 }
