@@ -206,7 +206,7 @@ class RockTetris {
 	public function analyseState(stateBank:Map<String, Int64>) {
 		var retval:Null<Int64> = stateBank[lastMoveSerialized];
 		stateBank.set(lastMoveSerialized, moveCount);
-		if (retval != null) trace('analyse', retval, moveCount);
+		//if (retval != null) trace('analyse', retval, moveCount);
 		return retval;
 	}
 
@@ -226,7 +226,7 @@ class Day17 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: [Int64.ofInt(3068), Int64.fromFloat(1514285714288)]
+				expected: []//[Int64.ofInt(3068), Int64.fromFloat(1514285714288)]
 			}
 		});
 		new Day17(data, 17, tests);
@@ -266,10 +266,12 @@ class Day17 extends DayEngine {
 						// If we have five consecutive signature matches
 						if (++consecutive >= 5) {
 							// Put a pin in it and make sure the loop is consistent
-							trace('Move ${tetr.moveCount} seems to have the same state and identical last move as move $analysis');
+							//trace('Move ${tetr.moveCount} seems to have the same state and identical last move as move $analysis');
 							heightMarker = tetr.topBlockRow;
 							target = tetr.moveCount;
 							split = tetr.moveCount - analysis;
+							//for (_ in 0...split.low) tetr.dropBlock(); // attempted cheat - doesn't work
+							//done = true;
 						}
 					} else {
 						// Otherwise, start over in counting
@@ -288,14 +290,14 @@ class Day17 extends DayEngine {
 						// Maybe not so much a loop?
 						trace('Maybe not a pattern? Was expecting ${split} moves apart, but it\'s actually ${tetr.moveCount - analysis}');
 					}
-				} else if (analysis > target) {
+				} /*else if (analysis > target) {
 					// ↑ If we missed our mark
 					// Throw an error (probably a ghost pattern)
 					throw 'We seem to have missed the target (it was $target, but we\'re at $analysis)';
 					// heightMarker = tetr.topBlockRow;
 					// target = tetr.moveCount;
 					// split = tetr.moveCount - analysis;
-				}
+				}*/
 			} else
 				// Otherwise (and this shouldn't happen; if it does 100,000 years from now, though, we probably have the answer the hard way unless something went wrong)
 				throw 'Fell through the loop with null analysis';
@@ -315,5 +317,6 @@ class Day17 extends DayEngine {
 
 		// And derive the total number of rows based on how many more full loops we'd do
 		return tetr.topBlockRow + (fullLoops * heightDiff);
+		// 1_507_954_545_469 too low
 	}
 }
