@@ -1,8 +1,11 @@
 package y2022;
 
+import helder.Set;
+import haxe.Serializer;
 import haxe.Int64;
 import utils.Point;
 
+using utils.ArrayTools;
 using StringTools;
 using Safety;
 
@@ -24,12 +27,16 @@ class RockTetris {
 	var blocks:Array<Array<Array<RTSpace>>> = [];
 	var well:Array<Array<RTSpace>> = [];
 	var moves:Array<RTMove> = [];
-	var droppedRows:Int64 = 0;
-	var wellWidth = 7;
+
+	public var moveCount(default, null):Int64 = 0;
+	public var droppedRows(default, null):Int64 = 0;
+	public var wellWidth(default, null) = 7;
 
 	public var wellHeight(get, never):Int;
 	public var wellRealHeight(get, never):Int64;
 	public var topBlockRow(get, never):Int64;
+
+	public var lastMoveSerialized(default, null) = "";
 
 	public function new(data:String) {
 		for (def in blockDefs) {
@@ -58,20 +65,20 @@ class RockTetris {
 	function get_topBlockRow() {
 		var retval = wellRealHeight;
 		for (row in well) {
-			var hasBlock = false;
-			for (sp in row)
-				hasBlock = hasBlock || sp.getName() == "Rock";
-			if (hasBlock)
+			if (row.reduce((r, i) -> r || i != Empty, false))
 				break;
 			else
 				retval--;
 		}
+		// trace("topBlockRow", wellRealHeight, retval);
 		return retval;
 	}
 
 	function shiftUp(rows = 1) {
 		for (_ in 0...rows)
 			well.unshift([for (_ in 0...wellWidth) Empty]);
+		if (wellHeight > 500)
+			throw "Well height exceeded 500";
 
 		var fullcols = [for (_ in 0...wellWidth) false];
 		for (y => row in well) {
@@ -82,23 +89,25 @@ class RockTetris {
 			while (!done) {
 				done = true;
 				for (x => col in fullcols)
-					if (col && (fullcols[x-1].or(false) || fullcols[x+1].or(false)) && row[x] == Empty) {
+					if (col && !(fullcols[x - 1].or(true) && fullcols[x + 1].or(true)) && row[x] == Empty) {
 						fullcols[x] = false;
 						done = false;
 					}
 			}
-			
-			var allCols = true;
-			for (col in fullcols) allCols = allCols && col;
-			if (allCols) {
+			// trace(fullcols.map(i -> i ? "#" : ".").join(""));
+
+			if (fullcols.reduce((r, i) -> r && i)) {
+				// trace('allCols at $y/$wellHeight');
 				droppedRows += wellHeight - y;
 				well = well.slice(0, y);
 				break;
 			}
 		}
+		// trace('Height: $wellHeight/$wellRealHeight');
 	}
 
 	public function dropBlock() {
+		var s = new Serializer();
 		var curPos = new Point(2, 0);
 		var curBlock = blocks.shift();
 		if (curBlock == null)
@@ -162,6 +171,8 @@ class RockTetris {
 					}
 				}
 
+		s.serialize(curBlock);
+
 		var done = false;
 		while (!done) {
 			var dir = moves.shift();
@@ -174,6 +185,7 @@ class RockTetris {
 					case Down:
 						throw 'Illegal Down instruction in move queue';
 				}
+			s.serialize(dir);
 			moves.push(dir);
 
 			if (canMove(Down))
@@ -184,7 +196,18 @@ class RockTetris {
 			}
 		}
 
+		s.serialize(well);
+		moveCount++;
+		lastMoveSerialized = s.toString();
+
 		blocks.push(curBlock);
+	}
+
+	public function analyseState(stateBank:Map<String, Int64>) {
+		var retval:Null<Int64> = stateBank[lastMoveSerialized];
+		stateBank.set(lastMoveSerialized, moveCount);
+		if (retval != null) trace('analyse', retval, moveCount);
+		return retval;
 	}
 
 	public function toString()
@@ -213,17 +236,84 @@ class Day17 extends DayEngine {
 		var tetr = new RockTetris(data);
 		for (_ in 0...2022)
 			tetr.dropBlock();
-		// trace("\n" + tetr.toString());
+		// var lhs:Int64 = 12345, rhs:Int64 = 12344;
+		// trace(lhs == rhs + 1);
 		return tetr.topBlockRow;
 	}
 
 	function problem2(data:String) {
 		var tetr = new RockTetris(data);
-		// lol fuck no that ain't gonna work
-		// or it will but not in my lifetime
-		for (_ in 0...1000000)
-			for (_ in 0...1000000)
-				tetr.dropBlock();
-		return null;
+		var stateBank:Map<String, Int64> = [];
+
+		var target:Null<Int64> = null,
+			split:Null<Int64> = null,
+			heightMarker:Null<Int64> = null;
+		var lastHit:Int64 = -5, consecutive = 0;
+		var done = false;
+		while (!done) {
+			var analysis:Null<Int64> = null;
+
+			// Keep dropping blocks until the analysis picks up a signature match
+			do
+				tetr.dropBlock() while ((analysis = tetr.analyseState(stateBank)) == null);
+
+				// If we found a signature match
+			if (analysis != null) {
+				// If we don't have a loop target
+				if (target == null) {
+					// If the last signature match was one move after the current one
+					if (lastHit == analysis - 1) {
+						// If we have five consecutive signature matches
+						if (++consecutive >= 5) {
+							// Put a pin in it and make sure the loop is consistent
+							trace('Move ${tetr.moveCount} seems to have the same state and identical last move as move $analysis');
+							heightMarker = tetr.topBlockRow;
+							target = tetr.moveCount;
+							split = tetr.moveCount - analysis;
+						}
+					} else {
+						// Otherwise, start over in counting
+						consecutive = 1;
+					}
+					// And set our last hit to the analysis value
+					lastHit = analysis;
+				} else if (analysis == target) {
+					// ↑ If the last hit is the same as our target
+					// ↓ If there's also the same number of moves between the first/second and second/third hits
+					if (tetr.moveCount - analysis == split) {
+						// Definitely a loop; proceed to final phase
+						trace('Pattern seems to be confirmed! Move ${tetr.moveCount} seems to have the same state signature as $target, and each were $split moves apart.');
+						done = true;
+					} else {
+						// Maybe not so much a loop?
+						trace('Maybe not a pattern? Was expecting ${split} moves apart, but it\'s actually ${tetr.moveCount - analysis}');
+					}
+				} else if (analysis > target) {
+					// ↑ If we missed our mark
+					// Throw an error (probably a ghost pattern)
+					throw 'We seem to have missed the target (it was $target, but we\'re at $analysis)';
+					// heightMarker = tetr.topBlockRow;
+					// target = tetr.moveCount;
+					// split = tetr.moveCount - analysis;
+				}
+			} else
+				// Otherwise (and this shouldn't happen; if it does 100,000 years from now, though, we probably have the answer the hard way unless something went wrong)
+				throw 'Fell through the loop with null analysis';
+		}
+
+		// Count how many of our trillion moves are left
+		var movesLeft = (Int64.ofInt(1000000) * 1000000) - tetr.moveCount;
+		
+		var fullLoops = movesLeft / split, // Count how many times we'd loop through our pattern,
+			loopRemainder = movesLeft % split, // how many more moves are left from that,
+			heightDiff = tetr.topBlockRow - heightMarker; // and how much of an impact that makes on well height
+		// trace(movesLeft, fullLoops, loopRemainder);
+
+		// Run through the remaining moves
+		for (_ in 0...loopRemainder.low)
+			tetr.dropBlock();
+
+		// And derive the total number of rows based on how many more full loops we'd do
+		return tetr.topBlockRow + (fullLoops * heightDiff);
 	}
 }
