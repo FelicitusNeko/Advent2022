@@ -2,7 +2,7 @@ package y2022;
 
 using StringTools;
 
-var testData = [''];
+private var testData = [''];
 
 class Day extends DayEngine {
   public static function make(data:String) {

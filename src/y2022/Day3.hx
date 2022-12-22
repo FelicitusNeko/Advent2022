@@ -2,7 +2,7 @@ package y2022;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'vJrwpWtwJgWrhcsFMMfFFhFp
 jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
 PmmdzqPrVvPwwTWBwg

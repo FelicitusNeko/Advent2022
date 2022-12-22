@@ -4,7 +4,7 @@ import haxe.Exception;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'    [D]    
 [N] [C]    
 [Z] [M] [P]
@@ -17,13 +17,13 @@ move 1 from 1 to 2
 '
 ];
 
-typedef StackInstruction = {
+private typedef StackInstruction = {
 	var qty:Int;
 	var from:Int;
 	var to:Int;
 }
 
-class StackRunner {
+private class StackRunner {
 	var stacks:Array<Array<String>> = [];
 	var instructions:Array<StackInstruction> = [];
 

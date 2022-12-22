@@ -4,7 +4,7 @@ import haxe.Int64;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'root: pppw + sjmn
 dbpl: 5
 cczh: sllz + lgvd
@@ -33,7 +33,7 @@ private enum IMonkeyOp {
 	HumanInput;
 }
 
-abstract MonkeyOp(IMonkeyOp) from IMonkeyOp {
+private abstract MonkeyOp(IMonkeyOp) from IMonkeyOp {
 	public function new(op:IMonkeyOp)
 		this = op;
 

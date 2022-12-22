@@ -1,19 +1,18 @@
 package y2022;
 
-import haxe.Json;
 import helder.Set;
 import utils.Point;
 
 using StringTools;
 
-enum MoveInstruction {
+private enum MoveInstruction {
 	Up(step:Int);
 	Right(step:Int);
 	Down(step:Int);
 	Left(step:Int);
 }
 
-class Walker {
+private class Walker {
 	var rope:Array<Point>;
 	var head:Point;
 	var tail:Point;

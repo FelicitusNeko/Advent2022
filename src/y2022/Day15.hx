@@ -1,13 +1,11 @@
 package y2022;
 
 import haxe.Int64;
-import haxe.ds.ArraySort;
-import utils.HugeNumber;
 import utils.Point;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 Sensor at x=9, y=16: closest beacon is at x=10, y=16
 Sensor at x=13, y=2: closest beacon is at x=15, y=3
@@ -25,26 +23,26 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
 '
 ];
 
-typedef ISensor = {
+private typedef ISensor = {
 	var loc:Point;
 	var nearBeacon:Point;
 };
 
 @:forward
-abstract Sensor(ISensor) from ISensor to ISensor {
+private abstract Sensor(ISensor) from ISensor to ISensor {
 	public var manhattan(get, never):Int;
 
 	inline function get_manhattan()
 		return Math.round(Math.abs(this.loc.x - this.nearBeacon.x) + Math.abs(this.loc.y - this.nearBeacon.y));
 }
 
-typedef IRange = {
+private typedef IRange = {
 	var low:Int;
 	var high:Int;
 }
 
 @:forward
-abstract Range(IRange) from IRange to IRange {
+private abstract Range(IRange) from IRange to IRange {
 	public var size(get, never):Int;
 
 	inline function get_size()

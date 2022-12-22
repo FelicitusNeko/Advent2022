@@ -2,7 +2,7 @@ package y2022;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'30373
 25512
 65332
@@ -11,20 +11,20 @@ var testData = [
 '
 ];
 
-typedef ID8Tree = {
+private typedef ID8Tree = {
 	var height:Int;
 	var visible:Bool;
 	var scenic:Int;
 }
 
 @:forward
-abstract D8Tree(ID8Tree) from ID8Tree {
+private abstract D8Tree(ID8Tree) from ID8Tree {
 	@:to
 	public function toString()
 		return '${this.height}${this.visible ? "✅" : "❌"} ';
 }
 
-class TreeGrid {
+private class TreeGrid {
 	var grid:Array<Array<D8Tree>> = [];
 
 	public var width(get, never):Int;

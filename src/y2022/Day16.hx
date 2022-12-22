@@ -3,7 +3,9 @@ package y2022;
 using StringTools;
 using Safety;
 
-var testData = [
+// !!! WARNING !!! This takes well over a day (nearly two) to execute on an i9-12900K in its current state
+
+private var testData = [
 	'Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 Valve BB has flow rate=13; tunnels lead to valves CC, AA
 Valve CC has flow rate=2; tunnels lead to valves DD, BB
@@ -17,13 +19,13 @@ Valve JJ has flow rate=21; tunnel leads to valve II
 '
 ];
 
-typedef IValveNode = {
+private typedef IValveNode = {
 	var id:String;
 	var flowRate:Int;
 	var exits:Array<ValveNode>;
 }
 
-abstract ValveNode(IValveNode) from IValveNode {
+private abstract ValveNode(IValveNode) from IValveNode {
 	public var id(get, never):String;
 	public var flowRate(get, set):Int;
 	public var exits(get, never):Array<ValveNode>;
@@ -99,13 +101,13 @@ abstract ValveNode(IValveNode) from IValveNode {
 		return start.pathTo(this);
 }
 
-enum IValveMove {
+private enum IValveMove {
 	NoOp;
 	MoveTo(node:ValveNode);
 	Open(node:ValveNode);
 }
 
-abstract ValveMove(IValveMove) from IValveMove {
+private abstract ValveMove(IValveMove) from IValveMove {
 	@:to
 	public function toString()
 		return switch (this) {
@@ -115,7 +117,7 @@ abstract ValveMove(IValveMove) from IValveMove {
 		}
 }
 
-typedef ValveRules = {
+private typedef ValveRules = {
 	var maxMoves:Int;
 	var costPerMove:Int;
 	var costPerOpen:Int;
@@ -124,25 +126,25 @@ typedef ValveRules = {
 	var players:Int;
 }
 
-typedef ValvePlayer = {
+private typedef ValvePlayer = {
 	var curPos:ValveNode;
 	var moves:Array<ValveMove>;
 	var queue:Array<ValveMove>;
 }
 
-typedef IValveState = {
+private typedef IValveState = {
 	var players:Array<ValvePlayer>;
 	var valvesOn:Array<ValveNode>;
 	var total:Int;
 	var destQueue:Array<ValveNode>;
 }
 
-enum ValveMoveResult {
+private enum ValveMoveResult {
 	Good(moveCount:Int);
 	NeedInput(player:Int);
 }
 
-abstract ValveState(IValveState) from IValveState {
+private abstract ValveState(IValveState) from IValveState {
 	public var valvesOn(get, never):Array<ValveNode>;
 	public var total(get, never):Int;
 	public var destQueue(get, never):Array<ValveNode>;

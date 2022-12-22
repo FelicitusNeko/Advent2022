@@ -1,6 +1,5 @@
 package y2022;
 
-import helder.Set;
 import haxe.Serializer;
 import haxe.Int64;
 import utils.Point;
@@ -9,21 +8,21 @@ using utils.ArrayTools;
 using StringTools;
 using Safety;
 
-var testData = ['>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'];
-var blockDefs = ["####", ".#./###/.#.", "..#/..#/###", "#/#/#/#", "##/##"];
+private var testData = ['>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'];
+private var blockDefs = ["####", ".#./###/.#.", "..#/..#/###", "#/#/#/#", "##/##"];
 
-enum RTSpace {
+private enum RTSpace {
 	Empty;
 	Rock(falling:Bool);
 }
 
-enum RTMove {
+private enum RTMove {
 	Left;
 	Right;
 	Down;
 }
 
-class RockTetris {
+private class RockTetris {
 	var blocks:Array<Array<Array<RTSpace>>> = [];
 	var well:Array<Array<RTSpace>> = [];
 	var moves:Array<RTMove> = [];

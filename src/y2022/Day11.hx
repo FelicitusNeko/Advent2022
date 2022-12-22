@@ -8,7 +8,7 @@ import Sure.sure;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'Monkey 0:
 Starting items: 79, 98
 Operation: new = old * 19
@@ -39,13 +39,13 @@ Test: divisible by 17
 '
 ];
 
-typedef ISuperMod = {
+private typedef ISuperMod = {
 	var mod:Int;
 	var stack:Array<Int>;
 }
 
 //@:forward
-abstract SuperMod(ISuperMod) from ISuperMod {
+private abstract SuperMod(ISuperMod) from ISuperMod {
 	public var mod(get, never):Int;
 	public var stack(get, never):Array<Int>;
 
@@ -172,18 +172,18 @@ abstract SuperMod(ISuperMod) from ISuperMod {
 		return toHugeNumber().toString();
 }
 
-enum WorryOp {
+private enum WorryOp {
 	Add(lhs:Null<SuperMod>, rhs:Null<SuperMod>);
 	Mult(lhs:Null<SuperMod>, rhs:Null<SuperMod>);
 	None;
 }
 
-typedef Throw = {
+private typedef Throw = {
 	var item:SuperMod;
 	var dest:Int;
 }
 
-class Monkey {
+private class Monkey {
 	public var id(default, null):Int;
 
 	var convArray:Array<Int> = [];
@@ -276,7 +276,7 @@ class Monkey {
 			'Monkey $id:\n  Current items: ${items.join(", ")}\n  Operation: new = $worryOp\n  Test: divisible by $testDivisor\n    If true: throw to monkey $destTrue\n    If false: throw to monkey $destFalse';
 }
 
-class MonkeyGroup {
+private class MonkeyGroup {
 	public var monkeys(get, null):Array<Monkey>;
 
 	public function new(data:String, superWorry = false) {

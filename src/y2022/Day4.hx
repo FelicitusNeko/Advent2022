@@ -4,7 +4,7 @@ import haxe.Exception;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'2-4,6-8
 2-3,4-5
 5-7,7-9
@@ -14,7 +14,7 @@ var testData = [
 '
 ];
 
-typedef IElfAssignment = {
+private typedef IElfAssignment = {
 	var low1:Int;
 	var hi1:Int;
 	var low2:Int;
@@ -22,7 +22,7 @@ typedef IElfAssignment = {
 }
 
 @:forward
-abstract ElfAssignment(IElfAssignment) from IElfAssignment {
+private abstract ElfAssignment(IElfAssignment) from IElfAssignment {
 	public function new(low1:Int, hi1:Int, low2:Int, hi2:Int) {
 		if (low1 > hi1) {
 			var buf = low1;

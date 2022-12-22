@@ -5,7 +5,7 @@ import haxe.Json;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'[1,1,3,1,1]
 [1,1,5,1,1]
 
@@ -32,13 +32,13 @@ var testData = [
 '
 ];
 
-typedef IDataPair = {
+private typedef IDataPair = {
 	var first:Array<Dynamic>;
 	var second:Array<Dynamic>;
 }
 
 @:forward
-abstract DataPair(IDataPair) from IDataPair to IDataPair {
+private abstract DataPair(IDataPair) from IDataPair to IDataPair {
 	public function new(first:Array<Dynamic>, second:Array<Dynamic>)
 		this = {
 			first: first,

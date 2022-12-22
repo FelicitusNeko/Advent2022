@@ -4,19 +4,19 @@ import utils.Point;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'498,4 -> 498,6 -> 496,6
 503,4 -> 502,4 -> 502,9 -> 494,9
 '
 ];
 
-enum IContent {
+private enum IContent {
 	Empty;
 	Wall;
 	Sand;
 }
 
-abstract Content(IContent) from IContent to IContent {
+private abstract Content(IContent) from IContent to IContent {
 	@:to
 	public function toString()
 		return switch (this) {
@@ -26,7 +26,7 @@ abstract Content(IContent) from IContent to IContent {
 		}
 }
 
-class WallSystem {
+private class WallSystem {
 	var list:Array<Array<Point>> = [];
 	var map:Array<Array<Content>> = [];
 	var sandX = 500;

@@ -1,9 +1,10 @@
 package y2022;
 
 import haxe.ds.ArraySort;
+
 using StringTools;
 
-var testData = [
+private var testData = [
 	'$ cd /
 $ ls
 dir a
@@ -30,7 +31,7 @@ $ ls
 '
 ];
 
-abstract class D7FileSystemItem {
+private abstract class D7FileSystemItem {
 	public var name(default, null):Null<String>;
 	public var size(get, null):Int;
 	public var parent(default, null):Null<D7Directory> = null;
@@ -56,7 +57,7 @@ abstract class D7FileSystemItem {
 		return "".lpad(" ", indent) + '{{size}} $name';
 }
 
-class D7Directory extends D7FileSystemItem {
+private class D7Directory extends D7FileSystemItem {
 	var content:Array<D7FileSystemItem> = [];
 	var subdirs(get, never):Array<D7Directory>;
 
@@ -101,13 +102,14 @@ class D7Directory extends D7FileSystemItem {
 		return content.slice(0);
 
 	override public function toString(indent = 0) {
-	 	var retval = [super.toString(indent).replace("{{size}}", "dir")];
-	 	for (i in content) retval.push(i.toString(indent + 2));
+		var retval = [super.toString(indent).replace("{{size}}", "dir")];
+		for (i in content)
+			retval.push(i.toString(indent + 2));
 		return retval.join("\n");
 	}
 }
 
-class D7File extends D7FileSystemItem {
+private class D7File extends D7FileSystemItem {
 	public function new(name:String, size:Int) {
 		super(name);
 		this.size = size;
@@ -121,7 +123,7 @@ class D7File extends D7FileSystemItem {
 	}
 }
 
-class CommandLineInterpreter {
+private class CommandLineInterpreter {
 	public var root(default, null) = new D7Directory(null);
 	public var pwd(default, null):D7Directory;
 
@@ -135,9 +137,12 @@ class CommandLineInterpreter {
 				is_ls = false;
 			if (line.startsWith("$ cd")) {
 				var dest = line.substr(5);
-				if (dest == "/") pwd = root;
-				else if (dest == "..") pwd = pwd.parent;
-				else pwd = pwd.cd(line.substr(5));
+				if (dest == "/")
+					pwd = root;
+				else if (dest == "..")
+					pwd = pwd.parent;
+				else
+					pwd = pwd.cd(line.substr(5));
 			} else if (line.startsWith("$ ls")) {
 				is_ls = true;
 			} else if (is_ls) {
@@ -150,15 +155,17 @@ class CommandLineInterpreter {
 				throw 'Unexpected line "$line"';
 		}
 
-		//trace(root.toString());
+		// trace(root.toString());
 	}
 
 	public function getDirsAtMost(size:Int) {
 		var retval:Array<D7Directory> = [];
 		function parseDir(dir:D7Directory) {
-			if (dir.size <= size) retval.push(dir);
+			if (dir.size <= size)
+				retval.push(dir);
 			for (i in dir.getContent()) {
-				if (Std.isOfType(i, D7Directory)) parseDir(cast(i, D7Directory));
+				if (Std.isOfType(i, D7Directory))
+					parseDir(cast(i, D7Directory));
 			}
 		}
 		parseDir(root);
@@ -168,9 +175,11 @@ class CommandLineInterpreter {
 	public function getDirsAtLeast(size:Int) {
 		var retval:Array<D7Directory> = [];
 		function parseDir(dir:D7Directory) {
-			if (dir.size >= size) retval.push(dir);
+			if (dir.size >= size)
+				retval.push(dir);
 			for (i in dir.getContent()) {
-				if (Std.isOfType(i, D7Directory)) parseDir(cast(i, D7Directory));
+				if (Std.isOfType(i, D7Directory))
+					parseDir(cast(i, D7Directory));
 			}
 		}
 		parseDir(root);
@@ -180,6 +189,7 @@ class CommandLineInterpreter {
 
 class Day7 extends DayEngine {
 	var cmd:CommandLineInterpreter;
+
 	public static function make(data:String) {
 		var tests = testData.map(i -> {
 			return {
@@ -193,7 +203,8 @@ class Day7 extends DayEngine {
 	function problem1(data:String) {
 		cmd = new CommandLineInterpreter(data);
 		var totalSize = 0;
-		for (d in cmd.getDirsAtMost(100000)) totalSize += d.size;
+		for (d in cmd.getDirsAtMost(100000))
+			totalSize += d.size;
 		return totalSize;
 	}
 

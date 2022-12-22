@@ -4,14 +4,14 @@ import haxe.Exception;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'A Y
 B X
 C Z
 '
 ];
 
-enum abstract RPSSymbol(Int) to Int {
+private enum abstract RPSSymbol(Int) to Int {
 	var Rock = 1;
 	var Paper = 2;
 	var Scissors = 3;
@@ -26,7 +26,7 @@ enum abstract RPSSymbol(Int) to Int {
 		}
 }
 
-enum abstract RPSResult(Int) to Int {
+private enum abstract RPSResult(Int) to Int {
 	var Lose = 0;
 	var Draw = 3;
 	var Win = 6;
@@ -41,19 +41,19 @@ enum abstract RPSResult(Int) to Int {
 		}
 }
 
-enum OtherIs {
+private enum OtherIs {
 	Me;
 	Result;
 }
 
-typedef IRPSShoot = {
+private typedef IRPSShoot = {
 	var you:RPSSymbol;
 	var other:String;
 	var otherIs:OtherIs;
 }
 
 @:forward(you)
-abstract RPSShoot(IRPSShoot) from IRPSShoot {
+private abstract RPSShoot(IRPSShoot) from IRPSShoot {
 	public function new(you:RPSSymbol, other:String, otherIs:OtherIs) {
 		this = {you: you, other: other, otherIs: otherIs};
 	}

@@ -5,7 +5,7 @@ import haxe.ds.ArraySort;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'Monkey 0:
 Starting items: 79, 98
 Operation: new = old * 19
@@ -36,18 +36,18 @@ Test: divisible by 17
 '
 ];
 
-typedef Throw = {
+private typedef Throw = {
 	var item:Int64;
 	var dest:Int;
 }
 
-enum IWorryOp {
+private enum IWorryOp {
 	Add(rhs:Int64);
 	Mult(rhs:Int64);
 	Square;
 }
 
-abstract WorryOp(IWorryOp) from IWorryOp to IWorryOp {
+private abstract WorryOp(IWorryOp) from IWorryOp to IWorryOp {
 	public function new(op:IWorryOp)
 		this = op;
 
@@ -80,7 +80,7 @@ abstract WorryOp(IWorryOp) from IWorryOp to IWorryOp {
 		}
 }
 
-class Monkey {
+private class Monkey {
 	public var id(default, null):Int;
 
 	var items:Array<Int64> = [];
@@ -155,7 +155,7 @@ class Monkey {
   Amount of business: $business';
 }
 
-class MonkeyGroup {
+private class MonkeyGroup {
 	public var monkeys(get, null):Array<Monkey>;
 
 	var mod:Int64 = 1;

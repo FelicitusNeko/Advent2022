@@ -2,7 +2,7 @@ package y2022;
 
 import y2022.DayEngine.TestData;
 
-var testData = [
+private var testData = [
 	'1000
 2000
 3000

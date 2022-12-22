@@ -2,12 +2,12 @@ package y2022;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
 Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.'
 ];
 
-typedef IBlueprint = {
+private typedef IBlueprint = {
 	var id:Int;
 	var orebot:Int;
 	var claybot:Int;
@@ -21,7 +21,7 @@ typedef IBlueprint = {
 	};
 }
 
-enum abstract OreType(Int) from Int to Int {
+private enum abstract OreType(Int) from Int to Int {
 	var Ore = 0;
 	var Clay;
 	var Obsidian;
@@ -39,7 +39,7 @@ enum abstract OreType(Int) from Int to Int {
 }
 
 @:forward
-abstract Blueprint(IBlueprint) from IBlueprint {
+private abstract Blueprint(IBlueprint) from IBlueprint {
 	public inline function new(id:Int, orebot:Int, claybot:Int, obsbotOre:Int, obsbotClay:Int, geobotOre:Int, geobotObs:Int)
 		this = {
 			id: id,
@@ -72,7 +72,7 @@ abstract Blueprint(IBlueprint) from IBlueprint {
 			'Each obsidian robot costs ${this.obsbot.ore} ore and ${this.obsbot.clay} clay. Each geode robot costs ${this.geobot.ore} ore and ${this.geobot.obs} obsidian.';
 }
 
-class RobotFactory {
+private class RobotFactory {
 	var blueprints:Array<Blueprint>;
 
 	public var bots(get, null) = [1, 0, 0, 0];

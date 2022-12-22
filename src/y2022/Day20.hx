@@ -3,7 +3,7 @@ package y2022;
 import haxe.Int64;
 using StringTools;
 
-var testData = [
+private var testData = [
 	'1
 2
 -3
@@ -13,7 +13,7 @@ var testData = [
 4'
 ];
 
-typedef MixNumber = {
+private typedef MixNumber = {
 	var n:Int64;
 }
 

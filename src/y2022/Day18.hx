@@ -50,13 +50,13 @@ abstract Point3D(IPoint3D) from IPoint3D {
 	}
 }
 
-typedef AdjacentData = {
+private typedef AdjacentData = {
 	var point:Point3D;
 	var adjacent:Array<Point3D>;
 	var ?adjacentAir:Array<Point3D>;
 }
 
-enum SpaceType {
+private enum SpaceType {
 	Undetermined;
 	OpenAir;
 	Lava;

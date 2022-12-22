@@ -2,7 +2,7 @@ package y2022;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'addx 15
 addx -11
 addx 6
@@ -152,12 +152,12 @@ noop
 '
 ];
 
-enum CRTInstruction {
+private enum CRTInstruction {
 	AddX(val:Int);
 	NoOp;
 }
 
-class CRTProcessor {
+private class CRTProcessor {
 	public var cycles(default, null) = 0;
 	public var register(default, null) = 1;
 

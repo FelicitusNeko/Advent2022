@@ -6,7 +6,7 @@ import utils.Point;
 
 using StringTools;
 
-var testData = [
+private var testData = [
 	'Sabqponm
 abcryxxl
 accszExk
@@ -15,13 +15,13 @@ abdefghi
 '
 ];
 
-typedef IMapPoint = {
+private typedef IMapPoint = {
 	var height:Int;
 	var bestDist:Null<Int>;
 }
 
 @:forward
-abstract MapPoint(IMapPoint) from IMapPoint to IMapPoint {
+private abstract MapPoint(IMapPoint) from IMapPoint to IMapPoint {
 	public function new(height:Int, ?bestDist:Int)
 		this = {
 			height: height,
@@ -72,14 +72,14 @@ abstract MapPoint(IMapPoint) from IMapPoint to IMapPoint {
 		return 'Height: ${this.height} (${String.fromCharCode(this.height + HeightMap.charCode_a)}) - Best distance to space: ${this.bestDist}';
 }
 
-enum IMoveDir {
+private enum IMoveDir {
 	Up(diff:Int);
 	Right(diff:Int);
 	Down(diff:Int);
 	Left(diff:Int);
 }
 
-abstract MoveDir(IMoveDir) from IMoveDir to IMoveDir {
+private abstract MoveDir(IMoveDir) from IMoveDir to IMoveDir {
 	public var diff(get, never):Int;
 	public var dir(get, never):String;
 
@@ -136,7 +136,7 @@ abstract MoveDir(IMoveDir) from IMoveDir to IMoveDir {
 	}
 }
 
-class HeightMap {
+private class HeightMap {
 	public static final charCode_a = "a".charCodeAt(0);
 
 	var map:Array<Array<MapPoint>> = [];
