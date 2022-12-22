@@ -37,13 +37,87 @@ abstract MonkeyOp(IMonkeyOp) from IMonkeyOp {
 	public function new(op:IMonkeyOp)
 		this = op;
 
-	public function operate(ops:Map<String, MonkeyOp>) {
-		
-	}
+	public function operate(ops:Map<String, MonkeyOp>):MonkeyOp
+		return switch (this) {
+			case Add(l, r):
+				switch ([ops[l], ops[r]]) {
+					case [Number(nl), Number(nr)]: Number(nl + nr);
+					default: this;
+				}
+			case Sub(l, r):
+				switch ([ops[l], ops[r]]) {
+					case [Number(nl), Number(nr)]: Number(nl - nr);
+					default: this;
+				}
+			case Mult(l, r):
+				switch ([ops[l], ops[r]]) {
+					case [Number(nl), Number(nr)]: Number(nl * nr);
+					default: this;
+				}
+			case Div(l, r):
+				switch ([ops[l], ops[r]]) {
+					case [Number(nl), Number(nr)]: Number(nl / nr);
+					default: this;
+				}
+			case Eq(l, r):
+				switch ([ops[l], ops[r]]) {
+					case [Number(nl), Number(nr)]: IsEqual(nl == nr);
+					default: this;
+				}
+			default: this;
+		}
 
-	public function reverseOp(ops:Map<String, MonkeyOp>, carry:Int64) {
+	public function reverseOp(ops:Map<String, MonkeyOp>, carry:Int64)
+		return switch (this) {
+			case Add(l, r):
+				switch ([ops[l].toInt64(), ops[r].toInt64()]) {
+					case [null, null]: null; // H = ? + ?
+					case [x, null]: {human: carry - x, recurse: r}; // H = N + ?
+					case [null, y]: {human: carry - y, recurse: l}; // H = ? + N
+					default: throw '$this op led to double-resolved operation'; // H = N + N
+				}
+			case Sub(l, r):
+				switch ([ops[l].toInt64(), ops[r].toInt64()]) {
+					case [null, null]: null; // H = ? - ?
+					case [x, null]: {human: x - carry, recurse: r}; // H = N - ?
+					case [null, y]: {human: carry + y, recurse: l}; // H = ? - N
+					default: throw '$this op led to double-resolved operation'; // H = N - N
+				}
+			case Mult(l, r):
+				switch ([ops[l].toInt64(), ops[r].toInt64()]) {
+					case [null, null]: null; // H = ? * ?
+					case [x, null]: {human: carry / x, recurse: r}; // H = N * ?
+					case [null, y]: {human: carry / y, recurse: l}; // H = ? * N
+					default: throw '$this op led to double-resolved operation'; // H = N * N
+				}
+			case Div(l, r):
+				switch ([ops[l].toInt64(), ops[r].toInt64()]) {
+					case [null, null]: null; // H = ? / ?
+					case [x, null]: {human: x / carry, recurse: r}; // H = N / ?
+					case [null, y]: {human: carry * y, recurse: l}; // H = ? / N
+					default: throw '$this op led to double-resolved operation'; // H = N / N
+				}
+			case Eq(l, r):
+				switch ([ops[l].toInt64(), ops[r].toInt64()]) {
+					case [null, null]: null; // ? = ?
+					case [x, null]: {human: x, recurse: r};
+					case [null, x]: {human: x, recurse: l}; // N = H or H = N
+					default: throw '$this op led to double-resolved operation'; // N = N
+				}
+			case x:
+				throw 'Unexpected $x operation during reverseOp';
+		}
 
-	}
+	@:op(a == b)
+	public function eqMonkeyOp(rhs:MonkeyOp)
+		return switch ([this, rhs]) {
+			case [Add(ll, lr), Add(rl, rr)] | [Mult(ll, lr), Mult(rl, rr)]: (ll == rl && lr == rr) || (ll == rr && rl == lr);
+			case [Sub(ll, lr), Sub(rl, rr)] | [Div(ll, lr), Div(rl, rr)] | [Eq(ll, lr), Eq(rl, rr)]: (ll == rl && lr == rr);
+			case [IsEqual(l), IsEqual(r)]: l == r;
+			case [Number(l), Number(r)]: l == r;
+			case [HumanInput, HumanInput]: true;
+			default: false;
+		}
 
 	@:from
 	public static function fromString(opstr:String) {
@@ -91,15 +165,6 @@ class Day21 extends DayEngine {
 		return ops;
 	}
 
-	function operate(ops:Map<String, MonkeyOp>, lhs:String, rhs:String, cb:(Int64, Int64) -> Int64)
-		return switch (ops[lhs]) {
-			case Number(lnum): switch (ops[rhs]) {
-					case Number(rnum): cb(lnum, rnum);
-					default: null;
-				}
-			default: null;
-		}
-
 	function problem1(data:String) {
 		var ops = parseOpList(data);
 
@@ -107,16 +172,10 @@ class Day21 extends DayEngine {
 		while (!done) {
 			done = true;
 			for (monkey => op in ops) {
-				var result:Null<Int64> = switch (op) {
-					case Add(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l + r);
-					case Sub(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l - r);
-					case Mult(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l * r);
-					case Div(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l / r);
-					default: null;
-				}
-				if (result != null) {
+				var result = op.operate(ops);
+				if (op != result) {
+					ops[monkey] = result;
 					done = false;
-					ops[monkey] = Number(result);
 				}
 			}
 		}
@@ -138,53 +197,6 @@ class Day21 extends DayEngine {
 		}
 		ops["humn"] = HumanInput;
 
-		function reverseOp(human:Int64, op:MonkeyOp)
-			return switch (op) {
-				case Add(l, r):
-					// trace('$human = ${ops[l].toInt64()} + ${ops[r].toInt64()}');
-					switch ([ops[l].toInt64(), ops[r].toInt64()]) {
-						case [null, null]: null; // H = ? + ?
-						case [x, null]: {human: human - x, recurse: r}; // H = N + ?
-						case [null, y]: {human: human - y, recurse: l}; // H = ? + N
-						case [_, _]: null; // H = N + N
-					}
-				case Sub(l, r):
-					// trace('$human = ${ops[l].toInt64()} - ${ops[r].toInt64()}');
-					switch ([ops[l].toInt64(), ops[r].toInt64()]) {
-						case [null, null]: null; // H = ? - ?
-						case [x, null]: {human: x - human, recurse: r}; // H = N - ?
-						case [null, y]: {human: human + y, recurse: l}; // H = ? - N
-						case [_, _]: null; // H = N - N
-					}
-				case Mult(l, r):
-					// trace('$human = ${ops[l].toInt64()} * ${ops[r].toInt64()}');
-					switch ([ops[l].toInt64(), ops[r].toInt64()]) {
-						case [null, null]: null; // H = ? * ?
-						case [x, null]: {human: human / x, recurse: r}; // H = N * ?
-						case [null, y]: {human: human / y, recurse: l}; // H = ? * N
-						case [_, _]: null; // H = N * N
-					}
-				case Div(l, r):
-					// trace('$human = ${ops[l].toInt64()} / ${ops[r].toInt64()}');
-					switch ([ops[l].toInt64(), ops[r].toInt64()]) {
-						case [null, null]: null; // H = ? / ?
-						case [x, null]: {human: x / human, recurse: r}; // H = N / ?
-						case [null, y]: {human: human * y, recurse: l}; // H = ? / N
-						case [_, _]: null; // H = N / N
-					}
-				case Eq(l, r):
-					// trace('${ops[l].toInt64()} = ${ops[r].toInt64()}');
-					switch ([ops[l].toInt64(), ops[r].toInt64()]) {
-						case [null, null]: null; // ? = ?
-						case [x, null]: {human: x, recurse: r};
-						case [null, x]: {human: x, recurse: l}; // N = H or H = N
-						case [_, _]: null; // N = N (which shouldn't happen)
-					}
-
-				case x:
-					throw 'Unexpected $x operation during reverseOp';
-			}
-
 		function humanScan():Null<Int64> {
 			var scan = ops["root"];
 			var human:Null<Int64> = null;
@@ -192,20 +204,14 @@ class Day21 extends DayEngine {
 			while (!done) {
 				switch (scan) {
 					case HumanInput:
-						// trace('Found the answer $human');
 						return human;
-					case x = IsEqual(_) | Number(_):
-						throw 'Unexpected $x operation during humanScan';
 					case x:
-						// trace('Operating on $x');
-						var result = reverseOp(human, x);
-						if (result == null) {
-							// trace("No answer yet.");
+						var result = x.reverseOp(ops, human);
+						if (result == null)
 							done = true;
-						} else {
+						else {
 							human = result.human;
 							scan = ops[result.recurse];
-							// trace('The running count is now $human');
 						}
 				}
 			}
@@ -216,22 +222,19 @@ class Day21 extends DayEngine {
 		while (!done) {
 			done = true;
 			for (monkey => op in ops) {
-				var eqCheck = false;
-				var result:Null<Int64> = switch (op) {
-					case Number(_) | IsEqual(_): null;
-					case Add(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l + r);
-					case Sub(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l - r);
-					case Mult(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l * r);
-					case Div(lhs, rhs): operate(ops, lhs, rhs, (l, r) -> l / r);
-					case Eq(lhs, rhs):
-						eqCheck = true;
-						// trace('Root monkey is attempting to compare $lhs (${ops[lhs]}) to $rhs (${ops[rhs]}) for equality');
-						operate(ops, lhs, rhs, (l, r) -> l == r ? 1 : 0);
-					case HumanInput: humanScan();
-				}
-				if (result != null) {
-					done = false;
-					ops[monkey] = eqCheck ? IsEqual(result == 1) : Number(result);
+				switch (op.operate(ops)) {
+					case HumanInput:
+						ops[monkey] = switch (humanScan()) {
+							case null: HumanInput;
+							case x: 
+								done = false;
+								Number(x);
+						}
+					case result:
+						if (op != result) {
+							ops[monkey] = result;
+							done = false;
+						}
 				}
 			}
 		}
