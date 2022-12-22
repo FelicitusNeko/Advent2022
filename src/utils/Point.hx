@@ -1,5 +1,7 @@
 package utils;
 
+using Safety;
+
 typedef IPoint = {
 	var x:Int;
 	var y:Int;
@@ -39,7 +41,7 @@ abstract Point(IPoint) from IPoint to IPoint {
 
 	@:generic
 	public inline function arrayGet<T>(array:Array<Array<T>>)
-		return array[this.y][this.x];
+		return array[this.y].or([])[this.x];
 
 	@:generic
 	public inline function arraySet<T>(array:Array<Array<T>>, value:T)
