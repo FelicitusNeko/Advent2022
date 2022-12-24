@@ -1,6 +1,7 @@
 package y2022;
 
 using StringTools;
+using Safety;
 
 private var testData = [
 	'Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
@@ -19,23 +20,6 @@ private typedef IBlueprint = {
 		var ore:Int;
 		var obs:Int;
 	};
-}
-
-private enum abstract OreType(Int) from Int to Int {
-	var Ore = 0;
-	var Clay;
-	var Obsidian;
-	var Geode;
-
-	@:to
-	public inline function toString()
-		return switch (this) {
-			case 0: "Ore";
-			case 1: "Clay";
-			case 2: "Obsidian";
-			case 3: "Geode";
-			default: "Unknown";
-		};
 }
 
 @:forward
@@ -70,6 +54,44 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 		return 'Blueprint ${this.id}: Each ore robot costs ${this.orebot} ore. Each clay robot costs ${this.claybot} clay. '
 			+
 			'Each obsidian robot costs ${this.obsbot.ore} ore and ${this.obsbot.clay} clay. Each geode robot costs ${this.geobot.ore} ore and ${this.geobot.obs} obsidian.';
+}
+
+private enum abstract OreType(Int) from Int to Int {
+	var Ore = 0;
+	var Clay;
+	var Obsidian;
+	var Geode;
+
+	@:to
+	public inline function toString()
+		return switch (this) {
+			case 0: "Ore";
+			case 1: "Clay";
+			case 2: "Obsidian";
+			case 3: "Geode";
+			case x: 'Unknown ($x)';
+		};
+}
+
+private typedef IFactoryState = {
+	var minutes:Int;
+	var bots:Array<Int>;
+	var resources:Array<Int>;
+	var ?queue:OreType;
+}
+
+@:forward
+private abstract FactoryState(IFactoryState) from IFactoryState {
+	public function new(minutes:Int, bots:Array<Int>, resources:Array<Int>, ?queue:OreType)
+		this = {
+			minutes: minutes,
+			bots: bots,
+			resources: resources,
+			queue: queue
+		};
+
+	public function clone(?queue:OreType)
+		return new FactoryState(this.minutes, this.bots.slice(0), this.resources.slice(0), queue.or(this.queue));
 }
 
 private class RobotFactory {
@@ -143,46 +165,65 @@ private class RobotFactory {
 		this.resources = newResources;
 	}
 
-	public function runTurn() {
-		// check resources to build
-		var queue:Null<OreType> = null;
-		// Sys.println('Current ores: $resources');
-		var halfwayToGeode = resources[Obsidian] >= curBlueprint.geobot.obs / 2;
-		var halfwayToObsidian = resources[Clay] >= curBlueprint.obsbot.clay / 2;
-		if (resources[Ore] >= curBlueprint.geobot.ore && resources[Obsidian] >= curBlueprint.geobot.obs) {
-			Sys.println('Spend ${curBlueprint.geobot.ore} ore and ${curBlueprint.geobot.obs} obsidian to start building a geode-collecting robot.');
-			addResources(Ore, -curBlueprint.geobot.ore);
-			addResources(Obsidian, -curBlueprint.geobot.obs);
-			queue = Geode;
-		} else if (resources[Ore] >= curBlueprint.obsbot.ore && resources[Clay] >= curBlueprint.obsbot.clay && !halfwayToGeode) {
-			Sys.println('Spend ${curBlueprint.obsbot.ore} ore and ${curBlueprint.obsbot.clay} clay to start building an obsidian-collecting robot.');
-			addResources(Ore, -curBlueprint.obsbot.ore);
-			addResources(Clay, -curBlueprint.obsbot.clay);
-			queue = Obsidian;
-		} else if (resources[Ore] >= curBlueprint.claybot && !halfwayToGeode && !halfwayToObsidian) {
-			Sys.println('Spend ${curBlueprint.claybot} ore to start building a clay-collecting robot.');
-			addResources(Ore, -curBlueprint.claybot);
-			queue = Clay;
-		} else if (resources[Ore] >= curBlueprint.orebot && !halfwayToGeode && !halfwayToObsidian) {
-			Sys.println('Spend ${curBlueprint.orebot} ore to start building an ore-collecting robot.');
-			addResources(Ore, -curBlueprint.orebot);
-			queue = Ore;
-		}
-
-		// fetch resources
-		for (x => count in bots) {
-			addResources(x, count);
-			if (count > 0) {
-				var oreType:OreType = x;
-				Sys.println('$count $oreType-collecting robot collects $count $oreType; you now have ${resources[x]} $oreType.');
+	public function runSim(minutes:Int) {
+		var states:Array<FactoryState> = [
+			{
+				minutes: 0,
+				bots: bots.slice(0),
+				resources: resources.slice(0)
 			}
+		];
+		var max = 0;
+		var statesRun = 0;
+
+		while (states.length > 0) {
+			var s = states.shift();
+			//trace('State #${++statesRun}');
+
+			while (s.minutes < minutes) {
+				//trace('Minute ${s.minutes}');
+				if (s.queue == null) {
+					if (s.resources[Ore] >= curBlueprint.geobot.ore && s.resources[Obsidian] >= curBlueprint.geobot.obs)
+						states.push(s.clone(Geode));
+					if (s.resources[Ore] >= curBlueprint.obsbot.ore && s.resources[Clay] >= curBlueprint.obsbot.clay)
+						states.push(s.clone(Obsidian));
+					if (s.resources[Ore] >= curBlueprint.claybot)
+						states.push(s.clone(Clay));
+					if (s.resources[Ore] >= curBlueprint.orebot)
+						states.push(s.clone(Ore));
+				} else
+					switch (s.queue) {
+						case Geode:
+							s.resources[Ore] -= curBlueprint.geobot.ore;
+							s.resources[Obsidian] -= curBlueprint.geobot.obs;
+						case Obsidian:
+							s.resources[Ore] -= curBlueprint.obsbot.ore;
+							s.resources[Obsidian] -= curBlueprint.obsbot.clay;
+						case Clay:
+							s.resources[Ore] -= curBlueprint.claybot;
+						case Ore:
+							s.resources[Ore] -= curBlueprint.orebot;
+						case x:
+							throw 'Unknown ore type $x';
+					}
+				//trace('State stack: ${states.length}');
+
+				for (x => count in s.bots)
+					s.resources[x] += count;
+
+				if (s.queue != null) {
+					s.bots[s.queue]++;
+					s.queue = null;
+				}
+
+				s.minutes++;
+			}
+
+			var geode = s.resources[Geode];
+			if (max < geode) max = geode;
 		}
 
-		// finish building bots
-		if (queue != null) {
-			addBots(queue, 1);
-			Sys.println('The new $queue-collecting robot is ready; you now have ${bots[queue]} of them.');
-		}
+		return max;
 	}
 
 	public inline function reset() {
@@ -206,14 +247,8 @@ class Day19 extends DayEngine {
 		var factory = new RobotFactory(data);
 		var total = 0;
 		for (b in 0...factory.blueprintCount) {
-			// factory.blueprintId = 1;
 			factory.blueprintIndex = b;
-			for (x in 0...24) {
-				Sys.println('\n== Minute ${x + 1} ==');
-				factory.runTurn();
-			}
-			total += factory.resources[3] * factory.blueprintId;
-			factory.reset();
+			total += factory.runSim(24) * factory.blueprintId;
 		}
 		return total;
 	}
