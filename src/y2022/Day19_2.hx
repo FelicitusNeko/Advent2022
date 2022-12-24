@@ -287,6 +287,9 @@ class Day19_2 extends DayEngine {
 	}
 
 	function problem1(data:String) {
+		#if static
+		return null;
+		#else
 		var factory = new RobotFactory(data);
 		return null;
 		var total = 0;
@@ -297,6 +300,7 @@ class Day19_2 extends DayEngine {
 			total += factory.runSim(cache, 24) * factory.blueprintId;
 		}
 		return total;
+		#end
 	}
 
 	function problem2(data:String) {
