@@ -1,9 +1,13 @@
 package y2022;
 
-// !!! WARNING !!! Blows memory usage; no good
+import haxe.io.Bytes;
+import haxe.crypto.Crc32;
+import haxe.Serializer;
+import haxe.ds.HashMap;
 
 using StringTools;
 using Safety;
+using utils.ArrayTools;
 
 private var testData = [
 	'Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
@@ -26,6 +30,8 @@ private typedef IBlueprint = {
 
 @:forward
 private abstract Blueprint(IBlueprint) from IBlueprint {
+	static var pattern = ~/^Blueprint (\d+): Each ore robot costs (\d+) ore\.\s+Each clay robot costs (\d+) ore\.\s+Each obsidian robot costs (\d+) ore and (\d+) clay\.\s+Each geode robot costs (\d+) ore and (\d+) obsidian\.$/;
+
 	public inline function new(id:Int, orebot:Int, claybot:Int, obsbotOre:Int, obsbotClay:Int, geobotOre:Int, geobotObs:Int)
 		this = {
 			id: id,
@@ -43,7 +49,6 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 
 	@:from
 	public static function fromString(data:String) {
-		var pattern = ~/^Blueprint (\d+): Each ore robot costs (\d+) ore\.\s+Each clay robot costs (\d+) ore\.\s+Each obsidian robot costs (\d+) ore and (\d+) clay\.\s+Each geode robot costs (\d+) ore and (\d+) obsidian\.$/;
 		if (pattern.match(data)) {
 			var match = [for (x in 1...8) pattern.matched(x)].map(Std.parseInt);
 			return new Blueprint(match[0], match[1], match[2], match[3], match[4], match[5], match[6]);
@@ -56,6 +61,32 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 		return 'Blueprint ${this.id}: Each ore robot costs ${this.orebot} ore. Each clay robot costs ${this.claybot} clay. '
 			+
 			'Each obsidian robot costs ${this.obsbot.ore} ore and ${this.obsbot.clay} clay. Each geode robot costs ${this.geobot.ore} ore and ${this.geobot.obs} obsidian.';
+
+	public function canBuild(bot:OreType, s:FactoryState)
+		return switch (bot) {
+			case Ore: s.resources[Ore] >= this.orebot;
+			case Clay: s.resources[Ore] >= this.claybot;
+			case Obsidian: s.resources[Ore] >= this.obsbot.ore && s.resources[Clay] >= this.obsbot.clay;
+			case Geode: s.resources[Ore] >= this.geobot.ore && s.resources[Obsidian] >= this.geobot.obs;
+			case x: throw 'Invalid ore type $x';
+		}
+
+	public function spend(bot:OreType, s:FactoryState)
+		if (canBuild(bot, s))
+			switch (bot) {
+				case Ore:
+					s.resources[Ore] -= this.orebot;
+				case Clay:
+					s.resources[Ore] -= this.claybot;
+				case Obsidian:
+					s.resources[Ore] -= this.obsbot.ore;
+					s.resources[Clay] -= this.obsbot.clay;
+				case Geode:
+					s.resources[Ore] -= this.geobot.ore;
+					s.resources[Obsidian] -= this.geobot.obs;
+				case x:
+					throw 'Invalid ore type $x';
+			}
 }
 
 private enum abstract OreType(Int) from Int to Int {
@@ -75,32 +106,35 @@ private enum abstract OreType(Int) from Int to Int {
 		};
 }
 
-private typedef IFactoryState = {
-	var minutes:Int;
-	var bots:Array<Int>;
-	var resources:Array<Int>;
-	var ?queue:OreType;
-}
+@:structInit
+private class FactoryState {
+	public var minutes:Int;
+	public var bots:Array<Int>;
+	public var resources:Array<Int>;
+	public var queue:Null<OreType>;
 
-@:forward
-private abstract FactoryState(IFactoryState) from IFactoryState {
-	public function new(minutes:Int, bots:Array<Int>, resources:Array<Int>, ?queue:OreType)
-		this = {
-			minutes: minutes,
-			bots: bots,
-			resources: resources,
-			queue: queue
-		};
+	public function new(minutes:Int, bots:Array<Int>, resources:Array<Int>, ?queue:OreType) {
+		this.minutes = minutes;
+		this.bots = bots.slice(0);
+		this.resources = resources.slice(0);
+		this.queue = queue;
+	}
 
 	public function clone(?queue:OreType)
-		return new FactoryState(this.minutes, this.bots.slice(0), this.resources.slice(0), queue.or(this.queue));
+		return new FactoryState(minutes, bots.slice(0), resources.slice(0), queue.or(this.queue));
+
+	public function hashCode() {
+		var s = new Serializer();
+		s.serialize(minutes);
+		s.serialize(bots);
+		s.serialize(resources);
+		s.serialize(queue);
+		return Crc32.make(Bytes.ofString(s.toString()));
+	}
 }
 
 private class RobotFactory {
 	var blueprints:Array<Blueprint>;
-
-	public var bots(get, null) = [1, 0, 0, 0];
-	public var resources(get, null) = [0, 0, 0, 0];
 
 	public var blueprintIndex(default, set):Int;
 	public var blueprintId(get, set):Int;
@@ -108,18 +142,14 @@ private class RobotFactory {
 
 	var curBlueprint(get, never):Blueprint;
 
-	public var totalResources(get, never):Int;
+	var cache = new HashMap<FactoryState, Int>();
 
 	public function new(data:String) {
 		blueprints = data.rtrim().split("\n").map(i -> Blueprint.fromString(i));
 		blueprintIndex = 0;
+		for (b in blueprints)
+			trace(b);
 	}
-
-	inline function get_bots()
-		return this.bots.slice(0);
-
-	inline function get_resources()
-		return this.resources.slice(0);
 
 	inline function set_blueprintIndex(blueprintIndex:Int) {
 		if (blueprintIndex < 0 || blueprintIndex >= blueprintCount)
@@ -148,42 +178,20 @@ private class RobotFactory {
 	inline function get_curBlueprint()
 		return blueprints[blueprintIndex];
 
-	inline function get_totalResources() {
-		var retval = 0;
-		for (resource in resources)
-			retval += resource;
-		return retval;
-	}
-
-	inline function addBots(bot:OreType, add:Int) {
-		var newBots = bots;
-		newBots[bot] += add;
-		this.bots = newBots;
-	}
-
-	inline function addResources(ore:OreType, add:Int) {
-		var newResources = resources;
-		newResources[ore] += add;
-		this.resources = newResources;
-	}
-
-	public function runSim(minutes:Int) {
+	public function runSimOld(minutes:Int) {
 		var states:Array<FactoryState> = [
 			{
 				minutes: 0,
-				bots: bots.slice(0),
-				resources: resources.slice(0)
+				bots: [1, 0, 0, 0],
+				resources: [0, 0, 0, 0]
 			}
 		];
 		var max = 0;
-		var statesRun = 0;
 
 		while (states.length > 0) {
 			var s = states.shift();
-			//trace('State #${++statesRun}');
 
 			while (s.minutes < minutes) {
-				//trace('Minute ${s.minutes}');
 				if (s.queue == null) {
 					if (s.resources[Ore] >= curBlueprint.geobot.ore && s.resources[Obsidian] >= curBlueprint.geobot.obs)
 						states.push(s.clone(Geode));
@@ -208,7 +216,6 @@ private class RobotFactory {
 						case x:
 							throw 'Unknown ore type $x';
 					}
-				//trace('State stack: ${states.length}');
 
 				for (x => count in s.bots)
 					s.resources[x] += count;
@@ -222,19 +229,53 @@ private class RobotFactory {
 			}
 
 			var geode = s.resources[Geode];
-			if (max < geode) max = geode;
+			if (max < geode)
+				max = geode;
 		}
 
 		return max;
 	}
 
-	public inline function reset() {
-		bots = [1, 0, 0, 0];
-		resources = [0, 0, 0, 0];
+	function runState(s:FactoryState, cache:HashMap<FactoryState, Int>, minutes:Int) {
+		if (s.minutes == minutes)
+			return s.resources[Geode];
+
+		var maxOre = [
+			curBlueprint.orebot,
+			curBlueprint.claybot,
+			curBlueprint.obsbot.ore,
+			curBlueprint.geobot.ore
+		].reduce((r, i) -> r > i ? r : i);
+		if (s.queue == Ore
+			&& s.resources[Ore] >= maxOre
+			|| s.queue == Clay
+			&& s.resources[Clay] >= curBlueprint.obsbot.clay
+			|| s.queue == Obsidian
+			&& (s.resources[Obsidian] >= curBlueprint.geobot.obs || s.resources[Clay] == 0)
+			|| s.queue == Geode
+			&& s.resources[Obsidian] == 0)
+			return 0;
+
+		if (cache.exists(s))
+			return cache[s];
+
+		var max = 0;
+		while (s.minutes < minutes) {
+			if (s.queue == Ore && s.resources[Ore] >= curBlueprint.orebot) {
+				var tmpMax = 0;
+				// for (newGoal)
+			}
+		}
+
+		return 0;
+	}
+
+	public function runSim(cache:HashMap<FactoryState, Int>, minutes:Int) {
+		return 0;
 	}
 }
 
-class Day19 extends DayEngine {
+class Day19_2 extends DayEngine {
 	public static function make(data:String) {
 		var tests = testData.map(i -> {
 			return {
@@ -242,15 +283,18 @@ class Day19 extends DayEngine {
 				expected: [33]
 			}
 		});
-		new Day19(data, 19, tests, true);
+		new Day19_2(data, 19, tests, true);
 	}
 
 	function problem1(data:String) {
 		var factory = new RobotFactory(data);
+		return null;
 		var total = 0;
+		var cache = new HashMap<FactoryState, Int>();
+
 		for (b in 0...factory.blueprintCount) {
 			factory.blueprintIndex = b;
-			total += factory.runSim(24) * factory.blueprintId;
+			total += factory.runSim(cache, 24) * factory.blueprintId;
 		}
 		return total;
 	}

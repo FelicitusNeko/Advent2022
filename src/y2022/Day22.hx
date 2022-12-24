@@ -160,11 +160,14 @@ abstract private class PassMapper {
 			case MapEdge: " ";
 			case Empty: ".";
 			case Wall: "#";
-		}).join("")).join("\n") + "\n\n" + instructions.map(i -> switch (i) {
-			case Move(steps): '$steps';
-			case Turn(Left): "L";
-			case Turn(Right): "R";
-		}).join("") + '\n$pos, $facing';
+		}).join("")).join("\n")
+			+ "\n\n"
+			+ instructions.map(i -> switch (i) {
+				case Move(steps): '$steps';
+				case Turn(Left): "L";
+				case Turn(Right): "R";
+			}).join("")
+			+ '\n$pos, $facing';
 }
 
 private class PassMapper2D extends PassMapper {
@@ -176,10 +179,10 @@ private class PassMapper2D extends PassMapper {
 			case Up: {x: pos.x, y: height};
 		}, isWidthwise = [Right, Left].contains(facing);
 
-		//trace('At $pos, $facing -  Checking from $npos');
+		// trace('At $pos, $facing -  Checking from $npos');
 		for (_ in 0...(isWidthwise ? width : height)) {
 			npos = facing.applyToPoint(npos);
-			//trace('Checking at $npos (${npos.arrayGet(map)})');
+			// trace('Checking at $npos (${npos.arrayGet(map)})');
 			if (npos.arrayGet(map).or(MapEdge) != MapEdge || pos == npos)
 				return npos;
 		}
@@ -187,14 +190,14 @@ private class PassMapper2D extends PassMapper {
 	}
 
 	public function step() {
-		//trace('Starting at $pos');
+		// trace('Starting at $pos');
 		for (inst in instructions) {
 			switch (inst) {
 				case Move(steps):
-					//trace('Pacing $steps');
+					// trace('Pacing $steps');
 					for (_ in 0...steps) {
 						var dest = facing.applyToPoint(pos);
-						//trace('At $dest is a ${dest.arrayGet(map).or(MapEdge)}');
+						// trace('At $dest is a ${dest.arrayGet(map).or(MapEdge)}');
 						switch (dest.arrayGet(map).or(MapEdge)) {
 							case Wall: break;
 							case Empty: pos = dest;
@@ -208,23 +211,233 @@ private class PassMapper2D extends PassMapper {
 						}
 					}
 				case Turn(dir):
-					//trace('Turning $dir');
+					// trace('Turning $dir');
 					dir == Left ? facing-- : facing++;
 			}
-			//trace('Now at $pos facing $facing');
+			// trace('Now at $pos facing $facing');
 		}
 	}
 }
 
+private enum IPageLink {
+	TopOf(page:PM3DPage);
+	BottomOf(page:PM3DPage);
+	LeftOf(page:PM3DPage);
+	RightOf(page:PM3DPage);
+	Unlinked;
+}
+
+private abstract PageLink(IPageLink) from IPageLink {
+	@:to
+	public function toString()
+		return switch (this) {
+			case TopOf(page): 'Top of ${page.pageCoord}';
+			case BottomOf(page): 'Bottom of ${page.pageCoord}';
+			case LeftOf(page): 'Left of ${page.pageCoord}';
+			case RightOf(page): 'Right of ${page.pageCoord}';
+			case Unlinked: "Unlinked";
+		}
+}
+
+private enum RelativePos {
+	Within;
+	Above;
+	Below;
+	ToLeft;
+	ToRight;
+}
+
+private typedef IPM3DPage = {
+	var pageCoord:Point;
+	var pageSize:Int;
+	var ?topTo:PageLink;
+	var ?btmTo:PageLink;
+	var ?leftTo:PageLink;
+	var ?rightTo:PageLink;
+}
+
+@:forward
+private abstract PM3DPage(IPM3DPage) from IPM3DPage {
+	public var tl(get, never):Point;
+	public var br(get, never):Point;
+
+	inline function get_tl()
+		return {x: this.pageCoord.x * this.pageSize, y: this.pageCoord.y * this.pageSize};
+
+	inline function get_br()
+		return {x: (this.pageCoord.x + 1) * this.pageSize - 1, y: (this.pageCoord.y + 1) * this.pageSize - 1};
+
+	public function checkPos(pt:Point) {
+		var ltl = tl, lbr = br;
+		// trace(pt, ltl, lbr, ltl.y>pt.y, lbr.y<pt.y, ltl.x>pt.x, lbr.x<pt.x);
+		if (ltl.y > pt.y)
+			return Above;
+		if (lbr.y < pt.y)
+			return Below;
+		if (ltl.x > pt.x)
+			return ToLeft;
+		if (lbr.x < pt.x)
+			return ToRight;
+		return Within;
+	}
+
+	@:to
+	public function toString()
+		return 'Page ${this.pageCoord}:\n  Top leads to ${this.topTo}\n  Bottom leads to ${this.btmTo}\n  Left leads to ${this.leftTo}\n  Right leads to ${this.rightTo}';
+}
+
+@:generic
+private inline function traceAndReturn<T>(v:T) {
+	trace(v);
+	return v;
+}
+
 private class PassMapper3D extends PassMapper {
+	public var pageSize(default, null):Int;
+	public var pagesWide(get, never):Int;
+	public var pagesHigh(get, never):Int;
+
+	var pages:Array<PM3DPage> = [];
+	var curPage:PM3DPage;
+
 	public function new(data:String) {
 		super(data);
 
-		var pageSize = Math.round(Math.sqrt(width * height / 12));
-		trace(pageSize);
+		pageSize = Math.round(Math.sqrt(width * height / 12));
+		// trace(pageSize);
+
+		for (y in 0...Math.round(height / pageSize)) {
+			for (x in 0...Math.round(width / pageSize)) {
+				pages.push({
+					pageCoord: {x: x, y: y},
+					pageSize: pageSize
+				});
+			}
+		}
+
+		var pageMap:Map<String, PM3DPage> = [];
+		pages = pages.filter(i -> i.tl.arrayGet(map).or(MapEdge) != MapEdge);
+		for (page in pages)
+			pageMap.set(page.pageCoord, page);
+
+		for (page in pages) {
+			if (curPage == null && page.checkPos(pos) == Within)
+				curPage = page;
+
+			page.topTo = (() -> {
+				var up = page.pageCoord + {x: 0, y: -1};
+				if (up.y < 0)
+					up.y += pagesHigh;
+				if (pageMap.exists(up))
+					return BottomOf(pageMap[up]);
+				up.x = (up.x + 1) % 4;
+				if (pageMap.exists(up))
+					return RightOf(pageMap[up]);
+				up.x = ((up.x + 4) - 2) % 4;
+				if (pageMap.exists(up))
+					return LeftOf(pageMap[up]);
+				up.x = (up.x + 3) % 4;
+				if (pageMap.exists(up))
+					return TopOf(pageMap[up]);
+				up.x = ((up.x + 4) - 4) % 4;
+				if (pageMap.exists(up))
+					return TopOf(pageMap[up]);
+				throw 'Could not find linking page for top side of ${page.pageCoord}';
+			})();
+			page.btmTo = (() -> {
+				var down = page.pageCoord + {x: 0, y: 1};
+				if (down.y >= pagesHigh)
+					down.y = 0;
+				if (pageMap.exists(down))
+					return TopOf(pageMap[down]);
+				down.x = (down.x + 1) % 4;
+				if (pageMap.exists(down))
+					return LeftOf(pageMap[down]);
+				down.x = ((down.x + 4) - 2) % 4;
+				if (pageMap.exists(down))
+					return RightOf(pageMap[down]);
+				down.x = (down.x + 3) % 4;
+				if (pageMap.exists(down))
+					return BottomOf(pageMap[down]);
+				down.x = ((down.x + 4) - 4) % 4;
+				if (pageMap.exists(down))
+					return BottomOf(pageMap[down]);
+				throw 'Could not find linking page for bottom side of ${page.pageCoord}';
+			})();
+			page.leftTo = (() -> {
+				var left = page.pageCoord + {x: -1, y: 0};
+				if (left.x < 0)
+					left.x += pagesWide;
+				if (pageMap.exists(left))
+					return RightOf(pageMap[left]);
+				left.y = (left.y + 1) % 4;
+				if (pageMap.exists(left))
+					return BottomOf(pageMap[left]);
+				left.y = ((left.y + 4) - 2) % 4;
+				if (pageMap.exists(left))
+					return TopOf(pageMap[left]);
+				left.y = (left.y + 3) % 4;
+				if (pageMap.exists(left))
+					return LeftOf(pageMap[left]);
+				left.y = ((left.y + 4) - 4) % 4;
+				if (pageMap.exists(left))
+					return LeftOf(pageMap[left]);
+				throw 'Could not find linking page for left side of ${page.pageCoord}';
+			})();
+			page.rightTo = (() -> {
+				var right = page.pageCoord + {x: 1, y: 0};
+				if (right.x >= pagesWide)
+					right.x = 0;
+				if (pageMap.exists(right))
+					return LeftOf(pageMap[right]);
+				right.y = (right.y + 1) % 4;
+				if (pageMap.exists(right))
+					return TopOf(pageMap[right]);
+				right.y = ((right.y + 4) - 2) % 4;
+				if (pageMap.exists(right))
+					return BottomOf(pageMap[right]);
+				right.y = (right.y + 3) % 4;
+				if (pageMap.exists(right))
+					return RightOf(pageMap[right]);
+				right.y = ((right.y + 4) - 4) % 4;
+				if (pageMap.exists(right))
+					return RightOf(pageMap[right]);
+				throw 'Could not find linking page for right side of ${page.pageCoord}';
+			})();
+		}
+
+		for (page in pages) trace(page);
+		//trace(curPage);
 	}
 
-	public function step() {}
+	inline function get_pagesWide()
+		return Math.round(width / pageSize);
+
+	inline function get_pagesHigh()
+		return Math.round(height / pageSize);
+
+	public function step() {
+		for (inst in instructions) {
+			switch (inst) {
+				case Move(steps):
+					// trace('Pacing $steps');
+					for (_ in 0...steps) {
+						var dest = facing.applyToPoint(pos);
+						// TODO: this is where to check if we're stepping off the page
+						// trace('At $dest is a ${dest.arrayGet(map).or(MapEdge)}');
+						switch (dest.arrayGet(map).or(MapEdge)) {
+							case Wall: break;
+							case Empty: pos = dest;
+							case MapEdge: throw 'Stepped into a map edge (should not be possible in 3D mapper)';
+						}
+					}
+				case Turn(dir):
+					// trace('Turning $dir');
+					dir == Left ? facing-- : facing++;
+			}
+			// trace('Now at $pos facing $facing');
+		}
+	}
 }
 
 class Day22 extends DayEngine {
@@ -241,7 +454,7 @@ class Day22 extends DayEngine {
 	function problem1(data:String) {
 		var mapper = new PassMapper2D(data);
 		mapper.step();
-		//trace("\n" + mapper.toString());
+		// trace("\n" + mapper.toString());
 		return ((mapper.pos.y + 1) * 1000) + ((mapper.pos.x + 1) * 4) + mapper.facing;
 	}
 
