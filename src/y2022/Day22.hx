@@ -80,7 +80,7 @@ private enum abstract Facing(Int) from Int to Int {
 		}
 }
 
-private class PassMapper {
+abstract private class PassMapper {
 	var map:Array<Array<PWSpace>> = [];
 	var instructions:Array<PWInstruction> = [];
 
@@ -91,6 +91,9 @@ private class PassMapper {
 	public var height(get, never):Int;
 
 	public function new(data:String) {
+		#if static
+		throw "Day 22 doesn't currently work on static platforms due to use of ArrayTools.reduce";
+		#else
 		var split = data.rtrim().split("\n\n");
 		var mapLines = split[0].split("\n");
 		var width = mapLines.reduce((r, i) -> r < i.length ? i.length : r, 0);
@@ -145,6 +148,7 @@ private class PassMapper {
 		if (startX < 0)
 			throw 'Could not find starting position';
 		pos = {x: startX, y: 0};
+		#end
 	}
 
 	inline function get_width()
@@ -153,6 +157,21 @@ private class PassMapper {
 	inline function get_height()
 		return map.length;
 
+	abstract public function step():Void;
+
+	public function toString()
+		return map.map(i -> i.map(ii -> switch (ii) {
+			case MapEdge: " ";
+			case Empty: ".";
+			case Wall: "#";
+		}).join("")).join("\n") + "\n\n" + instructions.map(i -> switch (i) {
+			case Move(steps): '$steps';
+			case Turn(Left): "L";
+			case Turn(Right): "R";
+		}).join("") + '\n$pos, $facing';
+}
+
+private class PassMapper2D extends PassMapper {
 	function getOppSide() {
 		var npos:Point = switch (facing) {
 			case Right: {x: -1, y: pos.y};
@@ -199,17 +218,17 @@ private class PassMapper {
 			//trace('Now at $pos facing $facing');
 		}
 	}
+}
 
-	public function toString()
-		return map.map(i -> i.map(ii -> switch (ii) {
-			case MapEdge: " ";
-			case Empty: ".";
-			case Wall: "#";
-		}).join("")).join("\n") + "\n\n" + instructions.map(i -> switch (i) {
-			case Move(steps): '$steps';
-			case Turn(Left): "L";
-			case Turn(Right): "R";
-		}).join("") + '\n$pos, $facing';
+private class PassMapper3D extends PassMapper {
+	public function new(data:String) {
+		super(data);
+
+		var pageSize = Math.round(Math.sqrt(width * height / 12));
+		trace(pageSize);
+	}
+
+	public function step() {}
 }
 
 class Day22 extends DayEngine {
@@ -217,21 +236,21 @@ class Day22 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: [6032]
+				expected: [6032, 5031]
 			}
 		});
 		new Day22(data, 22, tests);
 	}
 
 	function problem1(data:String) {
-		var mapper = new PassMapper(data);
+		var mapper = new PassMapper2D(data);
 		mapper.step();
 		//trace("\n" + mapper.toString());
 		return ((mapper.pos.y + 1) * 1000) + ((mapper.pos.x + 1) * 4) + mapper.facing;
 	}
 
 	function problem2(data:String) {
-		var list = data.rtrim().split("\n");
+		var mapper = new PassMapper3D(data);
 		return null;
 	}
 }

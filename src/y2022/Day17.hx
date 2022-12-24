@@ -62,6 +62,10 @@ private class RockTetris {
 		return droppedRows + well.length;
 
 	function get_topBlockRow() {
+		#if static
+		throw "get topBlockRow not currently working on static platforms due to ArrayTools.reduce";
+		return wellRealHeight;
+		#else
 		var retval = wellRealHeight;
 		for (row in well) {
 			if (row.reduce((r, i) -> r || i != Empty, false))
@@ -71,6 +75,7 @@ private class RockTetris {
 		}
 		// trace("topBlockRow", wellRealHeight, retval);
 		return retval;
+		#end
 	}
 
 	function shiftUp(rows = 1) {
