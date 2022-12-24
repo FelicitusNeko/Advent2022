@@ -29,6 +29,7 @@ import y2022.Day20;
 import y2022.Day21;
 import y2022.Day22;
 import y2022.Day23;
+import y2022.Day24;
 
 using StringTools;
 using tink.CoreApi;
@@ -41,7 +42,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(null, 19); // Change to (year, day) - null will default to this year/day
+		new Main(null, 24); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
@@ -53,8 +54,9 @@ class Main {
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
 			2022 => [
-				Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make, Day8.make, Day9.make, Day10.make, Day11_2.make, Day12.make,
-				Day13.make, Day14.make, Day15.make, Day16.make, Day17.make, Day18.make, Day19_2.make, Day20.make, Day21.make, Day22.make, Day23.make
+				Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make, Day8.make, Day9.make, Day10.make,
+				Day11_2.make, Day12.make, Day13.make, Day14.make, Day15.make, Day16.make, Day17.make, Day18.make, Day19_2.make, Day20.make,
+				Day21.make, Day22.make, Day23.make, Day24.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
