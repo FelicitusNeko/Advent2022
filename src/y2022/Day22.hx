@@ -91,9 +91,6 @@ abstract private class PassMapper {
 	public var height(get, never):Int;
 
 	public function new(data:String) {
-		#if static
-		throw "Day 22 doesn't currently work on static platforms due to use of ArrayTools.reduce";
-		#else
 		var split = data.rtrim().split("\n\n");
 		var mapLines = split[0].split("\n");
 		var width = mapLines.reduce((r, i) -> r < i.length ? i.length : r, 0);
@@ -148,7 +145,6 @@ abstract private class PassMapper {
 		if (startX < 0)
 			throw 'Could not find starting position';
 		pos = {x: startX, y: 0};
-		#end
 	}
 
 	inline function get_width()
