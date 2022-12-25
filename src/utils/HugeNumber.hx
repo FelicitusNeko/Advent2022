@@ -9,6 +9,9 @@ abstract HugeNumber(Array<Int>) {
 
 	inline function getThis() return this.slice(0);
 
+	public function clone()
+		return new HugeNumber(this.slice(0));
+
 	@:op(a + b)
 	public static function addHuge(lhs:HugeNumber, rhs:HugeNumber) {
 		var lhsStack = lhs.getThis(), rhsStack = rhs.getThis();
@@ -81,6 +84,24 @@ abstract HugeNumber(Array<Int>) {
 		}
 		return mod;
 	}
+
+	@:op(a > b)
+	public static function gtHuge(lhs:HugeNumber, rhs:HugeNumber) {
+		var lhst = lhs.getThis(), rhst = rhs.getThis();
+		if (lhst.length > rhst.length) return true;
+		if (lhst.length < rhst.length) return false;
+
+		for (x in 0...lhst.length) {
+			if (lhst[x] > rhst[x]) return true;
+			if (lhst[x] < rhst[x]) return false;
+		}
+
+		return false;
+	}
+
+	@:op(a > b)
+	public static function gtInt(lhs:HugeNumber, rhs:Int)
+		return gtHuge(lhs, fromInt(rhs));
 
 	@:from
 	public static function fromInt(num:Int) {
