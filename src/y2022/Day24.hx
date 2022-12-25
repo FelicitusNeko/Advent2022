@@ -139,6 +139,7 @@ private class BlizzardEngine {
 
 		var best:Null<Int> = null;
 		while (states.length > 0) {
+			// TODO: We might want to sort by shortest Manhattan distance to find the best path faster
 			var st = states.shift();
 			if (best != null) {
 				// Might not be a bad idea to count the Manhattan distance to the exit; if it's going to take us longer to get there than our best path, prune the state entirely
