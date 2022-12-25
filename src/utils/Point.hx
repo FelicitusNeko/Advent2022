@@ -46,4 +46,7 @@ abstract Point(IPoint) from IPoint to IPoint {
 	@:generic
 	public inline function arraySet<T>(array:Array<Array<T>>, value:T)
 		return (array[this.y][this.x] = value);
+
+	public inline function manhattan(rhs:Point)
+		return Math.round(Math.abs(this.x - rhs.x) + Math.abs(this.y - rhs.y));
 }
