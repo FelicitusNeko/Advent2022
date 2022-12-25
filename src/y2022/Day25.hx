@@ -3,6 +3,7 @@ package y2022;
 import haxe.Int64;
 
 using StringTools;
+using utils.ArrayTools;
 
 private abstract SNAFUNumber(Int64) from Int64 to Int64 {
 	inline function new(val:Int64)
@@ -10,20 +11,14 @@ private abstract SNAFUNumber(Int64) from Int64 to Int64 {
 
 	@:from
 	public static function fromNotation(snafu:String) {
-		var val = 0;
-		for (ch in snafu.trim().split("")) {
-			val *= 5;
-			val += switch (ch) {
-				case "2": 2;
-				case "1": 1;
-				case "0": 0;
-				case "-": -1;
-				case "=": -2;
-				case x: throw 'Unrecognised character $x';
-			}
-			trace(val);
-		}
-		return new SNAFUNumber(val);
+		return new SNAFUNumber(snafu.trim().split("").map(i -> Int64.ofInt(switch (i) {
+			case "2": 2;
+			case "1": 1;
+			case "0": 0;
+			case "-": -1;
+			case "=": -2;
+			case x: throw 'Unrecognised character $x';
+		})).reduce((r:Int64, i:Int64) -> (r * 5) + i));
 	}
 
 	@:to
