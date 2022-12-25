@@ -85,7 +85,6 @@ class Day25 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		trace("No part 2 puzzle for day 25");
-		return null;
+		return "No part 2 puzzle for day 25";
 	}
 }
