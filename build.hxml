@@ -6,5 +6,5 @@
 -L safety
 -main Main
 #--cpp bin/cpp
-#--hl bin/main.hl
---interp
+--hl bin/main.hl
+#--interp
