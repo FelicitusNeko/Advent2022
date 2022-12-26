@@ -4,6 +4,8 @@ This is FelicitusNeko's repo for the [Advent of Code 2022](https://adventofcode.
 
 This will retrieve data from the AoC server, or you can manually build the cache.
 
+**Final score:** 46/50 stars collected before midnight EST on Christmas (beats last year's 45)
+
 ## Automatic retrieval
 
 Add two files:
