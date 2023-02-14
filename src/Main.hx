@@ -6,32 +6,8 @@ import haxe.Http;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import y2022.Day1;
-import y2022.Day2;
-import y2022.Day3;
-import y2022.Day4;
-import y2022.Day5;
-import y2022.Day6;
-import y2022.Day7;
-import y2022.Day8;
-import y2022.Day9;
-import y2022.Day10;
-import y2022.Day11_2;
-import y2022.Day12;
-import y2022.Day13;
-import y2022.Day14;
-import y2022.Day15;
-import y2022.Day16;
-import y2022.Day17;
-import y2022.Day18;
-import y2022.Day19;
-import y2022.Day20;
-import y2022.Day21;
-import y2022.Day22;
-import y2022.Day23;
-import y2022.Day24;
-import y2022.Day25;
 
+using Safety;
 using StringTools;
 using tink.CoreApi;
 
@@ -43,7 +19,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(null, 19); // Change to (year, day) - null will default to this year/day
+		new Main(2015, 1); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
@@ -54,17 +30,20 @@ class Main {
 		this.day = day == null ? today.getDate() : day;
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
+			2015 => [],
+
 			2022 => [
-				Day1.make, Day2.make, Day3.make, Day4.make, Day5.make, Day6.make, Day7.make, Day8.make, Day9.make, Day10.make,
-				Day11_2.make, Day12.make, Day13.make, Day14.make, Day15.make, Day16.make, Day17.make, Day18.make, Day19.make, Day20.make,
-				Day21.make, Day22.make, Day23.make, Day24.make, Day25.make
+				y2022.Day1.make, y2022.Day2.make, y2022.Day3.make, y2022.Day4.make, y2022.Day5.make, y2022.Day6.make, y2022.Day7.make, y2022.Day8.make,
+				y2022.Day9.make, y2022.Day10.make, y2022.Day11_2.make, y2022.Day12.make, y2022.Day13.make, y2022.Day14.make, y2022.Day15.make, y2022.Day16.make,
+				y2022.Day17.make, y2022.Day18.make, y2022.Day19.make, y2022.Day20.make, y2022.Day21.make, y2022.Day22.make, y2022.Day23.make, y2022.Day24.make,
+				y2022.Day25.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
 		// return;
 
 		getInput().handle(data -> {
-			funcMap[this.year][this.day - 1](data);
+			funcMap[this.year].or([])[this.day - 1].or(DummyDay.make)(data);
 		});
 	}
 
