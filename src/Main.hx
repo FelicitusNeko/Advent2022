@@ -24,13 +24,17 @@ class Main {
 
 	public function new(?year:Int, ?day:Int) {
 		var today = Date.now();
+		if (year != null && day == null)
+			throw "Year specified without day; please also specify day";
 		if (day == null && (today.getMonth() != 11 || today.getDate() > 25))
 			throw "Advent of Code is not in progress; please specify day";
 		this.year = year == null ? today.getFullYear() : year;
 		this.day = day == null ? today.getDate() : day;
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
-			2015 => [],
+			2015 => [
+				y2015.Day1.make
+			],
 
 			2022 => [
 				y2022.Day1.make, y2022.Day2.make, y2022.Day3.make, y2022.Day4.make, y2022.Day5.make, y2022.Day6.make, y2022.Day7.make, y2022.Day8.make,
