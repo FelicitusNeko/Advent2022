@@ -2,7 +2,7 @@ package y2022;
 
 import helder.Set;
 import utils.Point;
-import y2022.DayEngine.TestData;
+import DayEngine.TestData;
 
 using StringTools;
 

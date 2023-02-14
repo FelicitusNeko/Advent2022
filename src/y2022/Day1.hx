@@ -1,6 +1,6 @@
 package y2022;
 
-import y2022.DayEngine.TestData;
+import DayEngine.TestData;
 
 private var testData = [
 	'1000

@@ -150,7 +150,7 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 					var botComp = rhs.botValue - lhs.botValue;
 					return (botComp == 0) ? rhs.oreValue - lhs.oreValue : botComp;
 				});
-				// trace(states.map(i -> '${i.minutes}:${i.botValue}:${i.oreValue}'));
+				trace(states.map(i -> '${i.minutes}:${i.botValue}:${i.oreValue}'));
 			}
 
 			var s = states.shift();
@@ -182,20 +182,23 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 					// assuming we'd end up building a geode bot every turn, whether or not that's possible,
 					// if we can't beat the best score, don't bother to try
 					if (best >= s.ores[Geode] + (s.bots[Geode] * s.minutes) + tri(s.minutes)) {
-						//trace('nope', s.ores[Geode] + (s.bots[Geode] * s.minutes) + tri(s.minutes), best, states.length);
+						trace('nope', s.ores[Geode] + (s.bots[Geode] * s.minutes) + tri(s.minutes), best, states.length);
 						break;
 					}
 
 					// figure out what we can build with what we got
-					for (type in canBuild(s)) {
-						// don't build the thing if we can already mine enough resource to build one per turn
-						if (mx[type] <= s.bots[type])
-							continue;
-						var ns = s.clone();
-						ns.queue = type;
-						// we are unlikely to run into this, since we're caching "don't build" first, but just in case
-						if (!cache.exists(ns))
+					var cb = canBuild(s);
+					if (cb.length > 0) {
+						for (type in cb) {
+							// don't build the thing if we can already mine enough resource to build one per turn
+							if (mx[type] <= s.bots[type])
+								continue;
+							var ns = s.clone();
+							ns.queue = type;
+	
 							states.push(ns);
+						}
+						s.minutes = -1; // if we can build anything, then don't waste time building nothing
 					}
 				} else {
 					trace('done: ${s.ores}');
@@ -206,6 +209,7 @@ private abstract Blueprint(IBlueprint) from IBlueprint {
 				}
 			}
 		}
+		trace(cache);
 
 		return best;
 	}

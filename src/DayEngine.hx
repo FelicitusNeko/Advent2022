@@ -1,4 +1,4 @@
-package y2022;
+package;
 
 import haxe.Timer;
 import haxe.Exception;
