@@ -19,7 +19,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		new Main(2015, 4); // Change to (year, day) - null will default to this year/day
+		new Main(2015, 5); // Change to (year, day) - null will default to this year/day
 	}
 
 	public function new(?year:Int, ?day:Int) {
@@ -33,7 +33,7 @@ class Main {
 
 		var funcMap:Map<Int, Array<AdventMakeFunc>> = [
 			2015 => [
-				y2015.Day1.make, y2015.Day2.make, y2015.Day3.make, y2015.Day4.make
+				y2015.Day1.make, y2015.Day2.make, y2015.Day3.make, y2015.Day4.make, y2015.Day5.make
 			],
 
 			2022 => [
