@@ -17,15 +17,18 @@ abstract Point(IPoint) from IPoint to IPoint {
 
 	@:from
 	public static function fromString(str:String) {
-		var pattern = ~/^(-?\d+):(-?\d+)$/;
+		var pattern = ~/^(-?\d+)[:,](-?\d+)$/;
 		if (pattern.match(str)) 
 			return new Point(Std.parseInt(pattern.matched(1)), Std.parseInt(pattern.matched(2)));
 		else throw 'Invalid Point string "$str"';
 	}
 
+	public inline function iToString(separator = ":")
+		return '${this.x}$separator${this.y}';
+
 	@:to
 	public inline function toString()
-		return '${this.x}:${this.y}';
+		return iToString(":");
 
 	@:op(a == b)
 	public inline function eqPoint(rhs:Point)
