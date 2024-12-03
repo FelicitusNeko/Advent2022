@@ -41,7 +41,8 @@ abstract class DayEngine {
 							break;
 						}
 					}
-				if (pass)
+				Sys.print(" ");
+				if (pass) {
 					if (dontRun == true)
 						Sys.println("Tests passed");
 					else
@@ -52,6 +53,7 @@ abstract class DayEngine {
 							Sys.println('Execution failed on puzzle input and threw an exception');
 							Sys.println(e.details());
 						}
+				}
 			});
 		}
 	}

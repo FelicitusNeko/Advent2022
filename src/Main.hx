@@ -15,11 +15,12 @@ typedef AdventFunc = String->String;
 typedef AdventMakeFunc = String->Void;
 
 class Main {
-	var year = 2022;
+	var year = 2024;
 	var day:Int;
 
 	static function main() {
-		new Main(2015, 8); // Change to (year, day) - null will default to this year/day
+		//new Main(2024, 2); // Change to (year, day) - null will default to this year/day
+		new Main();
 	}
 
 	public function new(?year:Int, ?day:Int) {
@@ -41,6 +42,10 @@ class Main {
 				y2022.Day9.make, y2022.Day10.make, y2022.Day11_2.make, y2022.Day12.make, y2022.Day13.make, y2022.Day14.make, y2022.Day15.make, y2022.Day16.make,
 				y2022.Day17.make, y2022.Day18.make, y2022.Day19.make, y2022.Day20.make, y2022.Day21.make, y2022.Day22.make, y2022.Day23.make, y2022.Day24.make,
 				y2022.Day25.make
+			],
+
+			2024 => [
+				y2024.Day1.make, y2024.Day2.make, y2024.Day3.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
