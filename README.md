@@ -1,10 +1,10 @@
-# Advent of Code 2022
+# Advent of Code 2022 Engine
 
-This is FelicitusNeko's repo for the [Advent of Code 2022](https://adventofcode.com/), this year done in Haxe.
+This is FelicitusNeko's repo for the [Advent of Code 2022](https://adventofcode.com/), this year done in Haxe. I'm also doing 2024 in this engine, because the one I tried to make in 2023 was kind of broken and I never got around to fixing it.
 
 This will retrieve data from the AoC server, or you can manually build the cache.
 
-**Final score:** 46/50 stars collected before midnight EST on Christmas (beats last year's 45)
+**2022 Final score:** 46/50 stars collected before midnight EST on Christmas (beats last year's 45)
 
 ## Automatic retrieval
 
