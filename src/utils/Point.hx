@@ -1,5 +1,6 @@
 package utils;
 
+import haxe.Exception;
 using Safety;
 
 typedef IPoint = {
@@ -21,6 +22,12 @@ abstract Point(IPoint) from IPoint to IPoint {
 		if (pattern.match(str)) 
 			return new Point(Std.parseInt(pattern.matched(1)), Std.parseInt(pattern.matched(2)));
 		else throw 'Invalid Point string "$str"';
+	}
+
+	@:from
+	public static function fromArray(val:Array<Int>) {
+		if (val.length != 2) throw new Exception('Invalid array length for Point (expected 2, got ${val.length})');
+		return new Point(val[0], val[1]);
 	}
 
 	public inline function iToString(separator = ":")
