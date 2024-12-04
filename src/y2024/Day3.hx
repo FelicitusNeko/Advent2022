@@ -1,6 +1,7 @@
 package y2024;
 
 import haxe.Exception;
+
 using StringTools;
 
 class Day3 extends DayEngine {
@@ -58,17 +59,17 @@ class Day3 extends DayEngine {
 				case 0: // mul(x,y)
 					if (enable)
 						retval += Std.parseInt(pMul.matched(1)) * Std.parseInt(pMul.matched(2));
-          parse = pMul.matchedRight();
-        case 1: // do()
-          enable = true;
-          parse = pDo.matchedRight();
-        case 2: // don't()
-          enable = false;
-          parse = pDont.matchedRight();
-        case null: // no match
-          parse = '';
-        default:
-          throw new Exception("Unexpected min value returned");
+					parse = pMul.matchedRight();
+				case 1: // do()
+					enable = true;
+					parse = pDo.matchedRight();
+				case 2: // don't()
+					enable = false;
+					parse = pDont.matchedRight();
+				case null: // no match
+					parse = '';
+				default:
+					throw new Exception("Unexpected min value returned");
 			}
 		}
 		return retval;
