@@ -48,10 +48,11 @@ class Day5 extends DayEngine {
 		new Day5(data, 5, tests);
 	}
 
-	function parse(data:String) {
+	function problem(data:String, proc:(Array<Int>, Bool, Map<Int, Array<Int>>) -> Int) {
 		var seg = data.rtrim().split("\n\n").map(i -> i.split("\n"));
 		var rules:Map<Int, Array<Int>> = [];
 		var sets = [for (line in seg[1]) line.split(",").map(Std.parseInt)];
+		var retval = 0;
 
 		for (line in seg[0]) {
 			var nums = line.split("|").map(Std.parseInt);
@@ -64,21 +65,14 @@ class Day5 extends DayEngine {
 				rules.set(nums[0], [nums[1]]);
 		}
 
-		return {rules: rules, sets: sets};
-	}
-
-	function problem1(data:String) {
-		var p = parse(data);
-		var retval = 0;
-
-		for (line in p.sets) {
+		for (line in sets) {
 			var valid = true;
 			var check:Array<Int> = [];
 
 			for (num in line) {
-				if (check.length > 0 && p.rules.exists(num))
+				if (check.length > 0 && rules.exists(num))
 					for (c in check)
-						if (p.rules[num].contains(c)) {
+						if (rules[num].contains(c)) {
 							valid = false;
 							break;
 						}
@@ -87,44 +81,26 @@ class Day5 extends DayEngine {
 				check.push(num);
 			}
 
-			if (valid) 
-				retval += line[Math.floor(line.length / 2)];
+			retval += proc(line.slice(0), valid, rules);
 		}
 
 		return retval;
 	}
 
-	function problem2(data:String) {
-		var p = parse(data);
-		var retval = 0;
+	function problem1(data:String)
+		return problem(data, (line, valid, _) -> valid ? line[Math.floor(line.length / 2)] : 0);
 
-		for (line in p.sets) {
-			var valid = true;
-			var check:Array<Int> = [];
-
-			for (num in line) {
-				if (check.length > 0 && p.rules.exists(num))
-					for (c in check)
-						if (p.rules[num].contains(c)) {
-							valid = false;
-							break;
-						}
-				if (!valid)
-					break;
-				check.push(num);
-			}
-
+	function problem2(data:String)
+		return problem(data, (line, valid, rules) -> {
 			if (!valid) {
-				var fix = line.slice(0);
-				ArraySort.sort(fix, (l,r) -> {
-					if (p.rules[l].or([]).contains(r)) return -1;
-					if (p.rules[r].or([]).contains(l)) return 1;
+				ArraySort.sort(line, (l, r) -> {
+					if (rules[l].or([]).contains(r))
+						return -1;
+					if (rules[r].or([]).contains(l))
+						return 1;
 					return 0;
 				});
-				retval += fix[Math.floor(fix.length / 2)];
-			}
-		}
-
-		return retval;
-	}
+				return line[Math.floor(line.length / 2)];
+			} else return 0;
+		});
 }
