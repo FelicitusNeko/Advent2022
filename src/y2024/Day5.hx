@@ -1,8 +1,10 @@
 package y2024;
 
+import haxe.ds.ArraySort;
 import haxe.Exception;
 
 using StringTools;
+using Safety;
 
 private var testData = [
 	'47|53
@@ -40,7 +42,7 @@ class Day5 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: [143]
+				expected: [143, 123]
 			}
 		});
 		new Day5(data, 5, tests);
@@ -93,7 +95,36 @@ class Day5 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		var list = data.rtrim().split("\n");
-		return null;
+		var p = parse(data);
+		var retval = 0;
+
+		for (line in p.sets) {
+			var valid = true;
+			var check:Array<Int> = [];
+
+			for (num in line) {
+				if (check.length > 0 && p.rules.exists(num))
+					for (c in check)
+						if (p.rules[num].contains(c)) {
+							valid = false;
+							break;
+						}
+				if (!valid)
+					break;
+				check.push(num);
+			}
+
+			if (!valid) {
+				var fix = line.slice(0);
+				ArraySort.sort(fix, (l,r) -> {
+					if (p.rules[l].or([]).contains(r)) return -1;
+					if (p.rules[r].or([]).contains(l)) return 1;
+					return 0;
+				});
+				retval += fix[Math.floor(fix.length / 2)];
+			}
+		}
+
+		return retval;
 	}
 }
