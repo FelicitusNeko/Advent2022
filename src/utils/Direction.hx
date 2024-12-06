@@ -8,6 +8,16 @@ enum IDirection {
 }
 
 abstract Direction(IDirection) from IDirection {
+	public var c(get, never):String;
+
+	function get_c()
+		return switch (this) {
+			case Up: "^";
+			case Right: ">";
+			case Down: "v";
+			case Left: "<";
+		}
+
 	public function applyToPoint(pt:Point)
 		switch (this) {
 			case Up:
