@@ -189,6 +189,10 @@ class Day15 extends DayEngine {
 		}
 
 		trace('not found');
+		#if hl
+		return 0;
+		#else
 		return null;
+		#end
 	}
 }

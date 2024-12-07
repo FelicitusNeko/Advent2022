@@ -32,6 +32,10 @@ class Day1 extends DayEngine {
 				floor--;
 				if (floor < 0) return x + 1;
 		}
+		#if hl
+		return 0;
+		#else
 		return null;
+		#end
   }
 }
