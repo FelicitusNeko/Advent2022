@@ -29,8 +29,24 @@ class Day7 extends DayEngine {
 		new Day7(data, 7, tests);
 	}
 
-	function parse(data:String)
-		return [
+	private static function recursiveMath(ops:Int, target:Int64, current:Int64, values:Array<Int64>) {
+		if (values.length == 0)
+			return target == current;
+		for (op in 0...ops) {
+			var result = switch (op) {
+				case 0: recursiveMath(ops, target, current + values[0], values.slice(1));
+				case 1: recursiveMath(ops, target, current * values[0], values.slice(1));
+				case 2: recursiveMath(ops, target, Int64Helper.parseString('$current${values[0]}'), values.slice(1));
+				default: false;
+			}
+			if (result)
+				return true;
+		}
+		return false;
+	}
+
+	function problem(data:String, ops:Int, test:Int) {
+		var list = [
 			for (line in data.rtrim().split("\n")) {
 				var split = line.split(': ');
 				{
@@ -39,63 +55,20 @@ class Day7 extends DayEngine {
 				};
 			}
 		];
-
-	function problem1(data:String) {
-		var list = parse(data);
 		var retval:Int64 = 0;
-
-		function recursiveMath(target:Int64, current:Int64, values:Array<Int64>) {
-			if (values.length == 0)
-				return target == current;
-			for (op in 0...2) {
-				var result = switch (op) {
-					case 0: recursiveMath(target, current + values[0], values.slice(1));
-					case 1: recursiveMath(target, current * values[0], values.slice(1));
-					default: false;
-				}
-				if (result)
-					return true;
-			}
-			return false;
-		}
 
 		for (entry in list)
-			if (recursiveMath(entry.target, 0, entry.vals))
+			if (recursiveMath(ops, entry.target, 0, entry.vals))
 				retval += entry.target;
 
-		if (Int64.neq(retval, 3749))
-			trace(retval); // use the value this outputs as the solution
+		if (Int64.neq(retval, test))
+			Sys.println('WORKAROUND: Use this response → $retval'); // use the value this outputs as the solution
 		return retval.low; // HACK: because Haxe hates Int64
 	}
 
-	function problem2(data:String) {
-		var list = parse(data);
-		var retval:Int64 = 0;
+	function problem1(data:String)
+		return problem(data, 2, 3749);
 
-		function recursiveMath(target:Int64, current:Int64, values:Array<Int64>) {
-			if (values.length == 0)
-				return target == current;
-			for (op in 0...3) {
-				var result = switch (op) {
-					case 0: recursiveMath(target, current + values[0], values.slice(1));
-					case 1: recursiveMath(target, current * values[0], values.slice(1));
-					case 2: recursiveMath(target, Int64Helper.parseString('$current${values[0]}'), values.slice(1));
-					default: false;
-				}
-				if (result)
-					return true;
-			}
-			return false;
-		}
-
-		for (x => entry in list) {
-			trace(x);
-			if (recursiveMath(entry.target, 0, entry.vals))
-				retval += entry.target;
-		}
-
-		if (Int64.neq(retval, 11387))
-			trace(retval); // use the value this outputs as the solution
-		return retval.low; // HACK: because Haxe hates Int64
-	}
+	function problem2(data:String)
+		return problem(data, 3, 11387);
 }
