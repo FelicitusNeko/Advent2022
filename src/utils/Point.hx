@@ -49,6 +49,10 @@ abstract Point(IPoint) from IPoint to IPoint {
 	public inline function addPoint(rhs:Point)
 		return new Point(this.x + rhs.x, this.y + rhs.y);
 
+	@:op(a * b)
+	public inline function multPointByInt(rhs:Int)
+		return new Point(this.x * rhs, this.y * rhs);
+
 	@:generic
 	public inline function arrayGet<T>(array:Array<Array<T>>)
 		return array[this.y].or([])[this.x];
