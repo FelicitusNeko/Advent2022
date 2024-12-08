@@ -98,8 +98,6 @@ class Day8 extends DayEngine {
 			}
 		}
 
-
-
 		return [for (k in antinodes.keys()) k].map(Point.fromString).filter(i -> inBounds(i, p.size)).length;
 	}
 }
