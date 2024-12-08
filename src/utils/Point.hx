@@ -49,6 +49,14 @@ abstract Point(IPoint) from IPoint to IPoint {
 	public inline function addPoint(rhs:Point)
 		return new Point(this.x + rhs.x, this.y + rhs.y);
 
+	@:op(a - b)
+	public inline function subPoint(rhs:Point)
+		return new Point(this.x - rhs.x, this.y - rhs.y);
+
+	@:op(-a)
+	public inline function negPoint()
+		return new Point(-this.x, -this.y);
+
 	@:op(a * b)
 	public inline function multPointByInt(rhs:Int)
 		return new Point(this.x * rhs, this.y * rhs);
