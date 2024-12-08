@@ -60,14 +60,14 @@ class Day8 extends DayEngine {
 		for (nodes in p.nodes) {
 			for (z => n1 in nodes) {
 				for (n2 in nodes.slice(z + 1)) {
-					var dist:Point = [n1.x - n2.x, n1.y - n2.y];
-					antinodes.set(n1 + dist, true);
-					antinodes.set(n2 + dist * -1, true);
+					var dist:Point = n1 - n2;
+					if (inBounds(n1 + dist, p.size)) antinodes.set(n1 + dist, true);
+					if (inBounds(n2 - dist, p.size)) antinodes.set(n2 - dist, true);
 				}
 			}
 		}
 
-		return [for (k in antinodes.keys()) k].map(Point.fromString).filter(i -> inBounds(i, p.size)).length;
+		return [for (k in antinodes.keys()) k].length;
 	}
 
 	function problem2(data:String) {
@@ -77,13 +77,13 @@ class Day8 extends DayEngine {
 		for (nodes in p.nodes) {
 			for (z => n1 in nodes) {
 				for (n2 in nodes.slice(z + 1)) {
-					var dist:Point = [n1.x - n2.x, n1.y - n2.y];
+					var dist:Point = n1 - n2;
 					var vec = 0;
 					var stillok = false;
 					do {
 						stillok = false;
 						var n1vec = n1 + (dist * vec),
-							n2vec = n2 + (dist * -vec);
+							n2vec = n2 - (dist * vec);
 						if (inBounds(n1vec, p.size)) {
 							antinodes.set(n1vec, true);
 							stillok = true;
@@ -98,6 +98,6 @@ class Day8 extends DayEngine {
 			}
 		}
 
-		return [for (k in antinodes.keys()) k].map(Point.fromString).filter(i -> inBounds(i, p.size)).length;
+		return [for (k in antinodes.keys()) k].length;
 	}
 }
