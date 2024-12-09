@@ -45,7 +45,8 @@ class Main {
 			],
 
 			2024 => [
-				y2024.Day1.make, y2024.Day2.make, y2024.Day3.make, y2024.Day4.make, y2024.Day5.make, y2024.Day6.make, y2024.Day7.make, y2024.Day8.make
+				y2024.Day1.make, y2024.Day2.make, y2024.Day3.make, y2024.Day4.make, y2024.Day5.make, y2024.Day6.make, y2024.Day7.make, y2024.Day8.make,
+				y2024.Day9.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
