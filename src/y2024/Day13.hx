@@ -1,0 +1,91 @@
+package y2024;
+
+import utils.Point;
+import haxe.Exception;
+using StringTools;
+
+private var testData = [
+	'Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
+
+Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176
+
+Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450
+
+Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279'
+];
+
+class Day13 extends DayEngine {
+	public static function make(data:String) {
+		var tests = testData.map(i -> {
+			return {
+				data: i,
+				expected: [480]
+			}
+		});
+		new Day13(data, 13, tests);
+	}
+
+	function parse(data:String)
+		return [for (entry in data.rtrim().split("\n\n")) {
+			static var ptnButton = ~/Button [A-Z]: X([+-]\d+), Y([+-]\d+)/;
+			static var ptnPrize = ~/Prize: X=(\d+), Y=(\d+)/;
+
+			var parsed = [for (x => line in entry.split("\n")) {
+				var ptn = (x < 2 ? ptnButton : ptnPrize);
+				if (ptn.match(line))
+					[ptn.matched(1), ptn.matched(2)].map(Std.parseInt);
+				else throw new Exception('Failed to match pattern $x: $line');
+			}].map(i -> Point.fromArray([i[0], i[1]]));
+			{
+				buttons: parsed.slice(0,2),
+				prize: parsed[2]
+			};
+		}];
+
+	function problem1(data:String) {
+		var list = parse(data);
+		var retval = 0;
+
+		for (entry in list) {
+			var pt:Point = [0,0];
+			var pushesPerBtn = [0,0];
+			var bestScore:Null<Int> = null;
+
+			while (pt.x < entry.prize.x && pt.y < entry.prize.y) {
+				pt += entry.buttons[0];
+				pushesPerBtn[0]++;
+			}
+			if (pt == entry.prize && pushesPerBtn[0] <= 100) bestScore = pushesPerBtn[0] * 3;
+			while (pushesPerBtn[0] > 0) {
+				pt -= entry.buttons[0];
+				pushesPerBtn[0]--;
+				while (pt.x < entry.prize.x && pt.y < entry.prize.y) {
+					pt += entry.buttons[1];
+					pushesPerBtn[1]++;
+				}	
+				if (pt == entry.prize && pushesPerBtn[0] <= 100 && pushesPerBtn[1] <= 100){
+					var newScore = (pushesPerBtn[0] * 3) + (pushesPerBtn[1]);
+					bestScore = (bestScore == null) ? newScore : Math.round(Math.min(bestScore, newScore));
+				}
+			}
+
+			if (bestScore != null) retval += bestScore;
+		}
+
+
+		return retval;
+	}
+
+	function problem2(data:String) {
+		var list = data.rtrim().split("\n");
+		return null;
+	}
+}
