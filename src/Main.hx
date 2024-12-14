@@ -20,7 +20,7 @@ class Main {
 
 	static function main() {
 		//new Main(2024, 2); // Change to (year, day) - null will default to this year/day
-		new Main();
+		new Main(2024,12);
 	}
 
 	public function new(?year:Int, ?day:Int) {

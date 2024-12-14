@@ -87,7 +87,6 @@ MMMISSJEEE
 		return [for (line in data.rtrim().split("\n")) line.split("")];
 
 	function problem1(data:String) {
-
 		var grid = parse(data);
 		var zones:Array<Array<Point>> = [];
 		var zonech:Array<String> = [];
@@ -119,7 +118,6 @@ MMMISSJEEE
 				for (check in dirs.map(i -> i.applyToNewPoint(pt)))
 					if (!zonestr.contains(check))
 						perimeter++;
-			// trace(zonech[x], perimeter, zone.length, perimeter * zone.length, zonestr);
 			retval += perimeter * zone.length;
 		}
 
@@ -128,6 +126,86 @@ MMMISSJEEE
 
 	function problem2(data:String) {
 		var grid = parse(data);
-		return null;
+		var zones:Array<Array<Point>> = [];
+		var zonech:Array<String> = [];
+		var retval = 0;
+
+		for (y in 0...grid.length) {
+			var row = grid[y];
+			for (x in 0...row.length) {
+				var ch = row[x];
+				var pt:Point = [x, y];
+				if (ch != ".") {
+					zonech.push(ch);
+					pt.arraySet(grid, ".");
+					var scanqueue = [pt], zone = [pt];
+					while (scanqueue.length > 0)
+						for (rpt in scan(grid, ch, scanqueue.pop())) {
+							scanqueue.push(rpt);
+							zone.push(rpt);
+						}
+					zones.push(zone);
+				}
+			}
+		}
+
+		for (z => zone in zones) {
+			var top = zone[0].y, bottom = zone[0].y;
+			var left = zone[0].x, right = zone[0].x;
+			var sides = 0;
+			for (pt in zone) {
+				if (top > pt.y)
+					top = pt.y;
+				if (bottom < pt.y)
+					bottom = pt.y;
+				if (left > pt.x)
+					left = pt.x;
+				if (right < pt.x)
+					right = pt.x;
+			}
+
+			var zonestr = zone.map(i -> i.toString());
+			for (y in top - 1...bottom + 1) {
+				var streakfore = false, streakaft = false;
+				for (x in left...right + 1) {
+					var change = false;
+					var hasfore = zonestr.contains('$x:$y'),
+						hasaft = zonestr.contains('$x:${y + 1}');
+					if (hasfore != streakfore) {
+						change = true;
+						streakfore = hasfore;
+					}
+					if (hasaft != streakaft) {
+						change = true;
+						streakaft = hasaft;
+					}
+					if (change && (streakfore || streakaft) && !(streakfore && streakaft))
+						sides++;
+				}
+			}
+
+			for (x in left - 1...right + 1) {
+				var streakfore = false, streakaft = false;
+				for (y in top...bottom + 1) {
+					var change = false;
+					var hasfore = zonestr.contains('$x:$y'),
+						hasaft = zonestr.contains('${x + 1}:$y');
+					if (hasfore != streakfore) {
+						change = true;
+						streakfore = hasfore;
+					}
+					if (hasaft != streakaft) {
+						change = true;
+						streakaft = hasaft;
+					}
+					if (change && (streakfore || streakaft) && !(streakfore && streakaft))
+						sides++;
+				}
+			}
+
+			retval += sides * zone.length;
+		}
+
+		return retval;
 	}
 }
