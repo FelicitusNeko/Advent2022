@@ -37,6 +37,10 @@ abstract Point(IPoint) from IPoint to IPoint {
 	public inline function toString()
 		return iToString(":");
 
+	@:to
+	public inline function toPoint64()
+		return new Point64(this.x, this.y);
+
 	@:op(a == b)
 	public inline function eqPoint(rhs:Point)
 		return this.x == rhs.x && this.y == rhs.y;
