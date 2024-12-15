@@ -265,6 +265,15 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^',
 
 						while (queue != null && queue.length > 0) {
 							var box = queue.shift();
+							var dupe = false;
+							for (dupechk in boxes)
+								if (box == dupechk) {
+									dupe = true;
+									break;
+								}
+							if (dupe)
+								continue;
+
 							var calc = checkBox(p.grid, box, dir);
 							if (calc == null)
 								queue = null;
@@ -305,6 +314,5 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^',
 				}
 
 		return retval;
-		// 1549794 too low
 	}
 }
