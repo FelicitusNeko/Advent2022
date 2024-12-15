@@ -207,9 +207,104 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^',
 		return retval;
 	}
 
+	static function checkBox(grid:Array<Array<GridType>>, pt:Point, dir:Direction):Null<Array<Point>> {
+		var retval:Array<Point> = [];
+
+		for (chk in [pt, pt + [1, 0]].map(dir.applyToNewPoint))
+			switch (chk.arrayGet(grid)) {
+				case LeftBox:
+					retval.push(chk);
+					break;
+				case RightBox:
+					retval.push(chk + [-1, 0]);
+				case Wall:
+					return null;
+				default:
+			}
+		return retval;
+	}
+
 	function problem2(data:String) {
 		var p = parse2(data);
-		drawMap(p.grid);
-		return null;
+		var retval = 0;
+
+		for (dir in p.orders) {
+			switch (dir) {
+				case Left, Right:
+					{
+						var chk = p.pt;
+						do {
+							chk = dir.applyToNewPoint(chk);
+						} while (![Wall, Space].contains(chk.arrayGet(p.grid)));
+						if (chk.arrayGet(p.grid) == Space) {
+							var back = dir.reverse();
+							var backpt = back.applyToNewPoint(chk);
+							do {
+								chk.arraySet(p.grid, backpt.arrayGet(p.grid));
+								chk = backpt;
+								backpt = back.applyToNewPoint(chk);
+							} while (chk != p.pt);
+							p.pt = dir.applyToNewPoint(p.pt);
+							chk.arraySet(p.grid, Space);
+						}
+					}
+				case Up, Down:
+					{
+						var chk = dir.applyToNewPoint(p.pt);
+						var queue:Null<Array<Point>> = [];
+						var boxes:Array<Point> = [];
+
+						switch (chk.arrayGet(p.grid)) {
+							case Wall: queue = null;
+							case LeftBox: queue.push(chk);
+							case RightBox: queue.push(chk + [-1, 0]);
+							case Space:
+							case Box: throw new Exception("Single-width box on double-width map");
+							case Me: throw new Exception("Duplicate submarine on map");
+						}
+
+						while (queue != null && queue.length > 0) {
+							var box = queue.shift();
+							var calc = checkBox(p.grid, box, dir);
+							if (calc == null)
+								queue = null;
+							else {
+								for (more in calc)
+									queue.push(more);
+								boxes.push(box);
+							}
+						}
+						if (queue != null) {
+							while (boxes.length > 0) {
+								var box = boxes.pop();
+								for (pt in [box, box + [1, 0]]) {
+									dir.applyToNewPoint(pt).arraySet(p.grid, pt.arrayGet(p.grid));
+									pt.arraySet(p.grid, Space);
+								}
+							}
+							var newpt = dir.applyToNewPoint(p.pt);
+							newpt.arraySet(p.grid, Me);
+							p.pt.arraySet(p.grid, Space);
+							p.pt = newpt;
+						}
+					}
+			}
+		}
+
+		for (y => line in p.grid)
+			for (x => cell in line)
+				switch (cell) {
+					case LeftBox:
+						if (line[x + 1] != RightBox)
+							throw new Exception("Left box part without right");
+						retval += (y * 100) + x;
+					case RightBox:
+						if (line[x - 1] != LeftBox)
+							throw new Exception("Right box part without left");
+					default:
+				}
+
+		return retval;
+		// 1549794 too low
 	}
 }
