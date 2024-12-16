@@ -171,9 +171,9 @@ class Day16 extends DayEngine {
 					foreblocked = false;
 					here.pt.arraySet(grid, here.score + 1000);
 				}
-				if (val != null && (val < 0 || score < val)) {
+				if (val != null && (val < 0 || score <= val)) {
 					there.arraySet(grid, score);
-					if (there != goal) queue.push({
+					if (there != goal && (val == -1 || score < val)) queue.push({
 						pt: there,
 						dir: dir,
 						score: score
@@ -183,7 +183,7 @@ class Day16 extends DayEngine {
 			}
 		}
 
-		//File.saveContent('maze.csv', grid.map(i -> i.join(",")).join("\n"));
+		File.saveContent('maze.csv', grid.map(i -> i.join(",")).join("\n"));
 
 		var backqueue:Array<Point> = [goal];
 		var paths:Map<String, Bool> = [goal => true];
