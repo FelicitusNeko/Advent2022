@@ -30,7 +30,7 @@ class Day20 extends DayEngine {
 		var tests = testData.map(i -> {
 			return {
 				data: i,
-				expected: [0]
+				expected: [0, 285]
 			}
 		});
 		new Day20(data, 20, tests);
@@ -101,7 +101,47 @@ class Day20 extends DayEngine {
 	}
 
 	function problem2(data:String) {
-		var list = parse(data);
-		return null;
+		var grid = parse(data);
+		var pt = (() -> {
+			for (y => line in grid)
+				for (x => cell in line)
+					if (cell == "S")
+						return new Point(x, y);
+			return null;
+		})();
+		if (pt == null)
+			throw new Exception("Start point not found");
+
+		var path:Array<String> = [pt];
+		var lastDir:Direction = Up;
+		var done = false;
+		while (!done) {
+			var dirs = [lastDir, lastDir.cw(), lastDir.ccw()];
+			if (path.length <= 1)
+				dirs.push(lastDir.reverse());
+			for (dir in dirs) {
+				var chk = dir.applyToNewPoint(pt);
+				switch (chk.arrayGet(grid)) {
+					case ".":
+						lastDir = dir;
+						path.push(pt = chk);
+						break;
+					case "E":
+						path.push(pt = chk);
+						done = true;
+						break;
+					default:
+				}
+			}
+		}
+
+		var cheats:Map<Int, Int> = [];
+		// logic for this goes here, but I don't even know where to start
+
+		var retval = 0;
+		var goal = path.length < 100 ? 50 : 100;
+		for (k => v in cheats) if (k >= goal) retval += v;
+
+		return retval;
 	}
 }
