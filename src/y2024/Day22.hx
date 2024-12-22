@@ -73,7 +73,6 @@ class Day22 extends DayEngine {
 			var delta = Bytes.alloc(2000);
 			var cur = (seed % 10).low;
 
-			// Sys.print('\nStart $cur...');
 			for (x in 0...2000) {
 				val = prune(mix(val, val * 64));
 				val = prune(mix(val, val / 32));
@@ -83,113 +82,67 @@ class Day22 extends DayEngine {
 				price.set(x, nv);
 				delta.set(x, nv - cur);
 				cur = nv;
-
-				// testing code
-				// if (z == 0 && x < 10) {
-				// 	var d = delta.get(x);
-				// 	if (d > 10) d -= 256;
-				// 	Sys.print('+($d) = ${price.get(x)}...');
-				// }
 			}
 			prices.push(price);
 			deltas.push(delta);
 		}
 
-		inline function getStreak(b:Bytes) // turns bytes into a string of signed bytes
-			return [
-				for (z in 0...b.length) { // for each byte
-					var r = b.get(z); // get the byte
-					if (r > 127) r -= 256; // bound it to a signed value
-					r; // return it
-				}
-			].join(","); // join them all in a comma-separated list
+		inline function sign8(i:Int) // bound an Int to a signed 8-bit value
+			return i > 127 ? (i - 256) : i; // assumes that it's receiving an 8-bit value
 
-		/*
-			for (x => d in deltas) { // for each list of deltas
-				for (b in 0...d.length - 4) { // for every byte while there are still at least four bytes left
+		var deltabytes = deltas.map(i -> i.getData()); // extract BytesData from deltas in advance so we only do it once per
+		for (x => dd in deltabytes) { // for each set of deltas
+			var b:Array<Int> = []; // set up to process four bytes at a time
+			for (y in 0...dd.length) { // for each byte in delta data
+				b.push(sign8(Bytes.fastGet(dd, y))); // sign and push the next byte
+				if (b.length > 4) // we only want four
+					b.shift(); // so throw out anything more
+				var bstr = b.join(","); // join them in a comma-separated string
+				if (cache.exists(bstr)) // if this value is cached already
+					continue; // no need to process this
 
-					var streak = d.sub(b, 4); // get four bytes
-					var streakstr = getStreak(streak); // make a string of them
-					if (cache.exists(streakstr)) // if it's cached
-						continue; // don't process it again
-
-					var val = prices[x].get(b + 3); // get the price at the fourth price change
-					if (streakstr == "-2,1,-1,3") // if it's this one from the example
-						trace(streakstr, val); // trace it
-					for (y in x + 1...deltas.length) { // now we want to check for every subsequent delta list
-						var id = deltas[y]; // get the deltas
-						for (ib in 0...id.length - 4) // for every byte while there are still at least four bytes left
-							if (streak == deltas[y].sub(ib, 4)) { // if these four bytes are the same as the one we're scanning for
-								if (streakstr == "-2,1,-1,3") // if it's this one from the example
-									trace(streakstr, prices[y].get(b + 3)); // let us know that we found it here
-								val += prices[y].get(b + 3); // get the price at the fourth price change and add it to the running tally
-								break; // we can only buy from this vendor one time
-							}
-					}
-					cache[streakstr] = val; // cache the tally for this sequence of deltas
-				}
-			}
-		 */
-		for (x => d in deltas) {
-			inline function sign8(i:Int)
-				return i > 127 ? (i - 256) : i;
-			inline function cmpArray(l:Array<Int>, r:Array<Int>) {
-				var ret = true;
-				if (l.length != r.length)
-					ret = false;
-				for (i in 0...l.length)
-					if (l[i] != r[i]) {
-						ret = false;
-						break;
-					}
-				return ret;
-			}
-
-			var b:Array<Int> = [];
-			for (y in 0...d.length) {
-				b.push(sign8(d.get(y)));
-				if (b.length > 4)
-					b.shift();
-				var bstr = b.join(",");
-				if (cache.exists(bstr))
-					continue;
-
-				var val = prices[x].get(y);
+				var val = prices[x].get(y); // get the price at this offset and start a tally
 				// if (bstr == "-2,1,-1,3") // if it's this one from the example
 				// 	trace(x, bstr, val); // trace it
-				for (ix in x + 1...deltas.length) {
-					var id = deltas[ix];
-					var ib:Array<Int> = [];
-					for (iy in 0...id.length) {
-						ib.push(sign8(id.get(iy)));
-						if (ib.length > 4)
-							ib.shift();
-						if (cmpArray(b, ib)) {
+				for (ix in x + 1...deltas.length) { // for every subsequent list of deltas
+					var streaklen = 0; // count how many bytes match
+
+					var id = deltabytes[ix]; // get the appropriate BytesData of deltas
+					for (iy in 0...id.length) { // for each byte in it
+						if (sign8(Bytes.fastGet(id, iy)) != b[streaklen++]) // if the next byte in the b set doesn't match
+							streaklen = 0; // then reset the streak
+						if (streaklen == 4) { // but if we find all four
+							val += prices[ix].get(iy); // add the price to the tally
 							// if (bstr == "-2,1,-1,3") // if it's this one from the example
-							// 	trace(ix, bstr, prices[ix].get(iy)); // trace it
-							val += prices[ix].get(iy);
-							break;
+							// 	trace(ix, bstr, prices[ix].get(iy), val); // trace it
+							break; // and then we can't buy from this vendor again
 						}
 					}
 				}
 
-				cache[bstr] = val;
+				cache[bstr] = val; // tally me banana (literally)
 			}
 		}
 
-		var best = 0;
-		var beststr = "";
+		var best = 0; // highest number of bananas for a four-byte sequence of deltas
+		var bestcount = 0; // how many times this number of bananas has come up, just in case
+		var beststr = ""; // which sequence of deltas first set the current best record
 		for (k => v in cache) { // for each cached tally
 			if (v > best) { // if this is the highest tally we've seen
 				best = v; // keep track of it
 				beststr = k; // and its delta string
-			}
+				bestcount = 1; // reset best count
+			} else if (v == best) // if we matched the best
+				bestcount++; // increase bestcount
 		}
-		//trace(best, beststr); // output what we found
+		// trace(best, beststr); // output what we found
 
-		 if (beststr != "-2,1,-1,3")
-		 	Sys.println('WORKAROUND: Use this response → $beststr'); // use the value this outputs as the solution
-		return beststr == "-2,1,-1,3" ? 1 : 0;
+		if (bestcount > 1) // if more than one tally matches the best
+			trace('It\'s tied at $best'); // then tell the user (hope this doesn't happen)
+		if (beststr != "-2,1,-1,3") // if it isn't the expected example result
+			Sys.println('WORKAROUND: Use this response → $beststr'); // use the value this outputs as the solution
+		return beststr == "-2,1,-1,3" ? 1 : 0; // this is to unify output types
 		// 1,-4,2,2 incorrect
+		// -2,0,0,2 incorrect
 	}
 }
