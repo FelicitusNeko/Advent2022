@@ -31,7 +31,7 @@ class Day22 extends DayEngine {
 3
 2024
 ',
-				expected: [null, 1]
+				expected: [null, 23]
 			}
 		];
 		new Day22(data, 22, tests);
@@ -64,85 +64,42 @@ class Day22 extends DayEngine {
 
 	function problem2(data:String) {
 		var retval:Int64 = 0;
-		var prices:Array<Bytes> = [];
-		var deltas:Array<Bytes> = [];
 		var cache:Map<String, Int> = [];
-		for (z => seed in parse(data)) {
-			var val = seed;
-			var price = Bytes.alloc(2000);
-			var delta = Bytes.alloc(2000);
-			var cur = (seed % 10).low;
+		var b:Array<Int> = [];
 
-			for (x in 0...2000) {
-				val = prune(mix(val, val * 64));
-				val = prune(mix(val, val / 32));
-				val = prune(mix(val, val * 2048));
+		for (z => seed in parse(data)) { // for each seed in the list
+			var used:Map<String, Bool> = []; // since we can only use the first instance of a set of four deltas
+			var val = seed; // the seed for the generator
+			var cur = (seed % 10).low; // the starting price is based on the seed
+			b = []; // reset the byte list
 
-				var nv = (val % 10).low;
-				price.set(x, nv);
-				delta.set(x, nv - cur);
-				cur = nv;
-			}
-			prices.push(price);
-			deltas.push(delta);
-		}
+			for (_ in 0...2000) { // for 2000 iterations
+				val = prune(mix(val, val * 64)); // xor val on val*64 and truncate to last 7 bytes
+				val = prune(mix(val, val / 32)); // xor val on floor(val/32) and truncate to last 7 bytes
+				val = prune(mix(val, val * 2048)); // xor val on val*2048 and truncate to last 7 bytes
 
-		inline function sign8(i:Int) // bound an Int to a signed 8-bit value
-			return i > 127 ? (i - 256) : i; // assumes that it's receiving an 8-bit value
-
-		var deltabytes = deltas.map(i -> i.getData()); // extract BytesData from deltas in advance so we only do it once per
-		for (x => dd in deltabytes) { // for each set of deltas
-			var b:Array<Int> = []; // set up to process four bytes at a time
-			for (y in 0...dd.length) { // for each byte in delta data
-				b.push(sign8(Bytes.fastGet(dd, y))); // sign and push the next byte
-				if (b.length > 4) // we only want four
-					b.shift(); // so throw out anything more
-				var bstr = b.join(","); // join them in a comma-separated string
-				if (cache.exists(bstr)) // if this value is cached already
-					continue; // no need to process this
-
-				var val = prices[x].get(y); // get the price at this offset and start a tally
-				// if (bstr == "-2,1,-1,3") // if it's this one from the example
-				// 	trace(x, bstr, val); // trace it
-				for (ix in x + 1...deltas.length) { // for every subsequent list of deltas
-					var streaklen = 0; // count how many bytes match
-
-					var id = deltabytes[ix]; // get the appropriate BytesData of deltas
-					for (iy in 0...id.length) { // for each byte in it
-						if (sign8(Bytes.fastGet(id, iy)) != b[streaklen++]) // if the next byte in the b set doesn't match
-							streaklen = 0; // then reset the streak
-						if (streaklen == 4) { // but if we find all four
-							val += prices[ix].get(iy); // add the price to the tally
-							// if (bstr == "-2,1,-1,3") // if it's this one from the example
-							// 	trace(ix, bstr, prices[ix].get(iy), val); // trace it
-							break; // and then we can't buy from this vendor again
-						}
+				var nv = (val % 10).low; // get the last digit
+				var delta = nv - cur; // measure the change since the last price
+				cur = nv; // the new price is now current
+				b.push(delta); // push the byte onto the stack
+				if (b.length > 4)
+					b.shift(); // never keep more than four
+				if (b.length == 4) { // if we have four
+					var dstr = b.join(","); // join them into a string
+					if (!used.exists(dstr)) { // if we haven't used this combination from this seed
+						used.set(dstr, true); // say we did
+						cache.set(dstr, (cache[dstr] ?? 0) + cur); // add this tally to the cache
 					}
 				}
-
-				cache[bstr] = val; // tally me banana (literally)
 			}
 		}
 
 		var best = 0; // highest number of bananas for a four-byte sequence of deltas
-		var bestcount = 0; // how many times this number of bananas has come up, just in case
-		var beststr = ""; // which sequence of deltas first set the current best record
 		for (k => v in cache) { // for each cached tally
-			if (v > best) { // if this is the highest tally we've seen
+			if (v > best)  // if this is the highest tally we've seen
 				best = v; // keep track of it
-				beststr = k; // and its delta string
-				bestcount = 1; // reset best count
-			} else if (v == best) // if we matched the best
-				bestcount++; // increase bestcount
 		}
-		// trace(best, beststr); // output what we found
 
-		if (bestcount > 1) // if more than one tally matches the best
-			trace('It\'s tied at $best'); // then tell the user (hope this doesn't happen)
-		if (beststr != "-2,1,-1,3") // if it isn't the expected example result
-			Sys.println('WORKAROUND: Use this response → $beststr'); // use the value this outputs as the solution
-		return beststr == "-2,1,-1,3" ? 1 : 0; // this is to unify output types
-		// 1,-4,2,2 incorrect
-		// -2,0,0,2 incorrect
+		return best;
 	}
 }
