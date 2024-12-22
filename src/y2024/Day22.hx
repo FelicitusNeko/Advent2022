@@ -74,10 +74,11 @@ class Day22 extends DayEngine {
 			b = []; // reset the byte list
 
 			for (_ in 0...2000) { // for 2000 iterations
-				val = prune(mix(val, val * 64)); // xor val on val*64 and truncate to last 7 bytes
-				val = prune(mix(val, val / 32)); // xor val on floor(val/32) and truncate to last 7 bytes
-				val = prune(mix(val, val * 2048)); // xor val on val*2048 and truncate to last 7 bytes
+				val = prune(mix(val, val * 64)); // xor val on val*64 and truncate to last 24 bits
+				val = prune(mix(val, val / 32)); // xor val on floor(val/32) and truncate to last 24 bits
+				val = prune(mix(val, val * 2048)); // xor val on val*2048 and truncate to last 24 bits
 
+				//1000000000000000000000000
 				var nv = (val % 10).low; // get the last digit
 				var delta = nv - cur; // measure the change since the last price
 				cur = nv; // the new price is now current
