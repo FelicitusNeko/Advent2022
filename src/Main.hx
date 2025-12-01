@@ -15,7 +15,7 @@ typedef AdventFunc = String->String;
 typedef AdventMakeFunc = String->Void;
 
 class Main {
-	var year = 2024;
+	var year = 2025;
 	var day:Int;
 
 	static function main() {
@@ -27,7 +27,10 @@ class Main {
 		var today = Date.now();
 		if (year != null && day == null)
 			throw "Year specified without day; please also specify day";
-		if (day == null && (today.getMonth() != 11 || today.getDate() > 25))
+		if (day == null && (today.getMonth() != 11 || (
+			(year < 2025 && today.getDate() > 25) ||
+			(year >= 2025 && today.getDate() > 12)
+			)))
 			throw "Advent of Code is not in progress; please specify day";
 		this.year = year == null ? today.getFullYear() : year;
 		this.day = day == null ? today.getDate() : day;
@@ -49,6 +52,10 @@ class Main {
 				y2024.Day9.make, y2024.Day10.make, y2024.Day11.make, y2024.Day12.make, y2024.Day13.make, y2024.Day14.make, y2024.Day15.make, y2024.Day16.make,
 				y2024.Day17.make, y2024.Day18.make, y2024.Day19.make, y2024.Day20.make, y2024.Day21.make, y2024.Day22.make, y2024.Day23.make, y2024.Day24.make,
 				y2024.Day25.make
+			],
+
+			2025 => [
+				
 			]
 		];
 		// trace(Main.populateFunctionMap());
