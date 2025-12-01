@@ -19,7 +19,7 @@ class Main {
 	var day:Int;
 
 	static function main() {
-		//new Main(2024, 2); // Change to (year, day) - null will default to this year/day
+		//new Main(2025, 1); // Change to (year, day) - null will default to this year/day
 		new Main();
 	}
 
@@ -55,7 +55,7 @@ class Main {
 			],
 
 			2025 => [
-				
+				y2025.Day1.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
