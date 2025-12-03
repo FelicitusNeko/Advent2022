@@ -16,8 +16,6 @@ private typedef D2Range = {
 }
 
 class Day2 extends DayEngine {
-	private static var PrimesPlusOne = [1, 2, 3, 5, 7, 11, 13, 17];
-
 	public static function make(data:String) {
 		var tests = testData.map(i -> {
 			return {
