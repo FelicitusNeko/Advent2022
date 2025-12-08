@@ -1,54 +1,10 @@
 package y2022;
 
 import DayEngine.TestData;
+import utils.Point3D;
 
 using StringTools;
 using Safety;
-
-typedef IPoint3D = {
-	var x:Int;
-	var y:Int;
-	var z:Int;
-}
-
-@:forward
-abstract Point3D(IPoint3D) from IPoint3D {
-	public inline function new(x:Int, y:Int, z:Int)
-		this = {
-			x: x,
-			y: y,
-			z: z
-		};
-
-	public inline function clone()
-		return new Point3D(this.x, this.y, this.z);
-
-	@:op(a + b)
-	public inline function addPoint3D(rhs:Point3D)
-		return new Point3D(this.x + rhs.x, this.y + rhs.y, this.z + rhs.z);
-
-	@:from
-	public static function ofString(data:String) {
-		var pattern = ~/^(-?\d+),(-?\d+),(-?\d+)$/;
-		if (pattern.match(data))
-			return new Point3D(Std.parseInt(pattern.matched(1)), Std.parseInt(pattern.matched(2)), Std.parseInt(pattern.matched(3)));
-		else
-			throw 'Invalid point data: $data';
-	}
-
-	@:to
-	public inline function toString()
-		return '${this.x},${this.y},${this.z}';
-
-	@:generic
-	public function arrayGet<T>(ar:Array<Array<Array<T>>>)
-		return ar[this.z].or([])[this.y].or([])[this.x];
-
-	@:generic
-	public function arraySet<T>(ar:Array<Array<Array<T>>>, value:T) {
-		return ar[this.z][this.y][this.x] = value;
-	}
-}
 
 private typedef AdjacentData = {
 	var point:Point3D;
