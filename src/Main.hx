@@ -56,7 +56,7 @@ class Main {
 
 			2025 => [
 				y2025.Day1.make, y2025.Day2.make, y2025.Day3.make, y2025.Day4.make,
-				y2025.Day5.make, y2025.Day6.make, y2025.Day7.make
+				y2025.Day5.make, y2025.Day6.make, y2025.Day7.make, y2025.Day8.make
 			]
 		];
 		// trace(Main.populateFunctionMap());
