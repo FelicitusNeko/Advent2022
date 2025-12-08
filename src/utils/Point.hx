@@ -16,6 +16,9 @@ abstract Point(IPoint) from IPoint to IPoint {
 			y: y
 		};
 
+	public inline function clone()
+		return new Point(this.x, this.y);
+
 	@:from
 	public static function fromString(str:String) {
 		var pattern = ~/^(-?\d+)[:,](-?\d+)$/;
