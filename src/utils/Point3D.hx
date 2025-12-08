@@ -81,4 +81,7 @@ abstract Point3D(IPoint3D) from IPoint3D {
 
 	public inline function manhattan(rhs:Point3D)
 		return Math.round(Math.abs(this.x - rhs.x) + Math.abs(this.y - rhs.y) + Math.abs(this.z - rhs.z));
+
+    public inline function euclidean(rhs:Point3D)
+        return Math.sqrt(Math.pow(this.x - rhs.x, 2) + Math.pow(this.y - rhs.y, 2) + Math.pow(this.z - rhs.z, 2));
 }

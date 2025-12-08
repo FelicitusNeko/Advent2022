@@ -78,4 +78,7 @@ abstract Point(IPoint) from IPoint to IPoint {
 
 	public inline function manhattan(rhs:Point)
 		return Math.round(Math.abs(this.x - rhs.x) + Math.abs(this.y - rhs.y));
+
+    public inline function euclidean(rhs:Point)
+        return Math.sqrt(Math.pow(this.x - rhs.x, 2) + Math.pow(this.y - rhs.y, 2));
 }
