@@ -45,7 +45,7 @@ class Day8 extends DayEngine {
 	}
 
 	function parse(data:String)
-		return data.rtrim().split("\n").map(Point3D.ofString);
+		return data.rtrim().split("\n").map(Point3D.fromString);
 
 	function problemCommon(data:String, part2:Bool) {
 		var list = parse(data);
@@ -69,7 +69,7 @@ class Day8 extends DayEngine {
 		for (i => dist in dists) {
 			if (!part2 && i >= (list.length == 20 ? 10 : 1000))
 				break;
-			
+
 			var mergeFrom = ref[dist.src], mergeTo = ref[dist.dest];
 			if (mergeFrom == mergeTo) continue;
 			groups[mergeFrom] = groups[mergeFrom].concat(groups[mergeTo]);

@@ -94,7 +94,7 @@ class Day18 extends DayEngine {
 	function problem1(data:String) {
 		var map:Map<String, AdjacentData> = [];
 		for (drop in data.rtrim().split("\n"))
-			map.set(drop, {point: Point3D.ofString(drop), adjacent: []});
+			map.set(drop, {point: Point3D.fromString(drop), adjacent: []});
 		for (_ => drop in map)
 			for (variant in variants) {
 				var check = (drop.point + variant).toString();

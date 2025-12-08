@@ -23,7 +23,7 @@ abstract Point3D(IPoint3D) from IPoint3D {
 		return new Point3D(this.x, this.y, this.z);
 
 	@:from
-	public static function ofString(data:String) {
+	public static function fromString(data:String) {
 		var pattern = ~/^(-?\d+),(-?\d+),(-?\d+)$/;
 		if (pattern.match(data))
 			return new Point3D(Std.parseInt(pattern.matched(1)), Std.parseInt(pattern.matched(2)), Std.parseInt(pattern.matched(3)));
