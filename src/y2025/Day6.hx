@@ -19,7 +19,7 @@ private typedef D6IOperation = {
 	isMult:Bool
 };
 
-@:follow
+@:forward
 private abstract D6Operation(D6IOperation) from D6IOperation to D6IOperation {
 	public function new(input:D6IOperation)
 		this = input;

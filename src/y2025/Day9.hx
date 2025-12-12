@@ -27,7 +27,7 @@ private enum D9IAngle {
 	BR;
 }
 
-@:follow
+@:forward
 private abstract D9Angle(D9IAngle) from D9IAngle to D9IAngle {
 	private function new(i:D9IAngle)
 		this = i;
@@ -85,7 +85,7 @@ private enum D9IAngleType {
 	Wide(a:D9Angle);
 }
 
-@:follow
+@:forward
 private abstract D9AngleType(D9IAngleType) from D9IAngleType to D9IAngleType {
 	private function new(i:D9IAngleType)
 		this = i;
