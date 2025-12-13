@@ -6,6 +6,7 @@ This will retrieve data from the AoC server, or you can manually build the cache
 
 - **2022 Final score:** 46/50 stars collected before 23:59 EST on Christmas (beats last year's 45)
 - **2024 Final score:** 40/50 stars collected before 23:59 EST on Christmas
+- **2025 Final score:** 19/24 stars collected before 23:59 EST on Dec 12
 
 ## Automatic retrieval
 
